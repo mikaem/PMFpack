@@ -194,7 +194,7 @@ namespace pmfpack
     dh = pow(10, dhi);
     dh0 = dh;
     
-    // Compute tau using bracketing algorithm
+    // Compute tau using bracketing algorithm 
     compute_tau(0);
     alfa0 = alfa;
     tau0 = tau;
