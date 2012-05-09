@@ -28,6 +28,7 @@
 
 #include <iostream>
 #include <assert.h>
+#include <vector>
 
 #include "Root.h"
 #include "GSL_F_Root.h"
@@ -37,7 +38,6 @@
 
 namespace pmfpack
 {
-
   class PMF
   {
   public:
@@ -47,11 +47,11 @@ namespace pmfpack
     
     ~PMF();
     
-    // [fmean, sigma, alfa, tau, Is, f, df, dtaudf, dtauds, d2taudf2, d2tauds2, d2taudfds]
-    double data[12];
-    
-    double *fmean, *sigma, *alfa, *tau;
-    
+    double fmean, sigma, alfa, tau, im, f, df;    
+    double* parameters[7];  // pointers to the parameters above
+
+    double dtaudf, dtauds, d2taudfdf, d2taudsds;
+        
     double grad_f[3], grad_s[3]; // Gradients of fmean and sigma
     
     double chi;    // Mean scalar dissipation rate
@@ -91,6 +91,8 @@ namespace pmfpack
     double counterflow(double);
     
     void counterflow(double *, int, double *, int);
+    
+    void CSD(double *, int, double *, int);
     
   };
 }

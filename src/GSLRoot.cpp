@@ -40,10 +40,10 @@ namespace pmfpack{
     gsl_set_error_handler(&my_error_handler);
   }
 
-  GSLRoot::GSLRoot(double _data[], Integrator *_integrator)
-  : Root(_data, _integrator)
+  GSLRoot::GSLRoot(double **_parameters, Integrator *_integrator)
+  : Root(_parameters, _integrator)
   {        
     gsl_set_error_handler(&my_error_handler);
   }
-    
+  
 }

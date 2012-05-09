@@ -56,8 +56,8 @@ namespace pmfpack{
     upper = 1.-1.e-6;
   }
 
-  GSL_F_Root::GSL_F_Root(double _data[], Integrator *_integrator)
-  : GSLRoot(_data, _integrator)
+  GSL_F_Root::GSL_F_Root(double **_parameters, Integrator *_integrator)
+  : GSLRoot(_parameters, _integrator)
   {
     T = gsl_root_fsolver_brent;
         
@@ -70,8 +70,9 @@ namespace pmfpack{
     lower = 1.e-3;
     
     upper = 1.-1.e-6;
+    
   }
-
+    
   GSL_F_Root::~GSL_F_Root()
   {
     gsl_root_fsolver_free(s);
@@ -97,9 +98,10 @@ namespace pmfpack{
     double x, xlo, xhi, x0;
     int status, status2, status3, iter, reset;
 
-    (*alfa) = erfinv(1 - data[0]);
+    (*alfa) = erfinv(1 - (*fmean));
     status = gsl_root_fsolver_set (s, &F, lower, upper);
     reset = 0;
+    
     while(status != GSL_SUCCESS && reset < 5){
       lower = lower / 10.;
       upper = 1 - (1 - upper) / 10.;
@@ -119,12 +121,12 @@ namespace pmfpack{
       if(xlo < 0.5){
         status2 = gsl_root_test_interval (xlo, xhi, 1e-16, 1e-15);
         status3 = gsl_root_test_delta (x, x0, 1e-16, 1e-15);
-        status  = gsl_root_test_residual(data[5], 1e-15);
+        status  = gsl_root_test_residual((*f), 1e-15);
       }
       else{
         status2 = gsl_root_test_interval (1-xhi, 1-xlo, 1e-16, 1e-15);
         status3 = gsl_root_test_delta (1-x, 1-x0, 1e-16, 1e-15);
-        status  = gsl_root_test_residual(data[5], 1e-15);
+        status  = gsl_root_test_residual((*f), 1e-15);
       }
       if(status2 == 0 || status3 == 0) status = 0;
               

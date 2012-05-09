@@ -41,8 +41,8 @@ namespace pmfpack
                       
     Root();
     
-    Root(double [], Integrator *);
-      
+    Root(double **, Integrator *);
+    
     ~Root() {};    
     
     virtual double compute(int) = 0;
@@ -53,10 +53,10 @@ namespace pmfpack
             
     int max_iteration;
     
-    double *data;
+    double **parameters;
     
-    double *fmean, *sigma, *alfa, *tau;
-
+    double *fmean, *sigma, *alfa, *tau, *im, *f, *df;
+    
     Integrator *integrator;
       
   };

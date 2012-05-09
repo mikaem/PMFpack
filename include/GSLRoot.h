@@ -35,7 +35,7 @@ namespace pmfpack
   public:
     GSLRoot();
     
-    GSLRoot(double [], Integrator *);
+    GSLRoot(double **, Integrator *);
     
     ~GSLRoot() {};
             

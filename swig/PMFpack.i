@@ -22,9 +22,9 @@
 %module PMFpack
 %{
 #define SWIG_FILE_WITH_INIT
-#define PY_ARRAY_UNIQUE_SYMBOL pyarray
 #include "numpy/arrayobject.h"
 #include "PMF.h"
+#include "convert2py.h"
 using namespace pmfpack;
 %}
 
@@ -41,7 +41,6 @@ using namespace pmfpack;
 %array_functions(double,double);
 %array_functions(int,int);
 %array_functions(double*,doublep);
-%array_functions(unsigned long,unsig_int);
 
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double*, int ), (double*, int)};
 %include PMF.h

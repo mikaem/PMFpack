@@ -31,11 +31,11 @@ namespace pmfpack
   class Integrator
   {
   public:
-    Integrator(double []);
+    Integrator(double **);
             
     ~Integrator() {};        
     
-    double *data;
+    double **parameters;
     
     virtual double compute(const double*, const double*, const double*) = 0;
     

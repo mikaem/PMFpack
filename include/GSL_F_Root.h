@@ -35,12 +35,12 @@ namespace pmfpack
   public:
     GSL_F_Root();
     
-    GSL_F_Root(double [], Integrator *);
+    GSL_F_Root(double **, Integrator *);
     
     ~GSL_F_Root();
             
     gsl_function F;
-    
+        
     double compute(int);
     
     void realloc(const unsigned int);

@@ -21,16 +21,17 @@
 
 #include "GSLIntegrator.h"
 #include "MyMath.h"
+#include <iostream>
 
 namespace pmfpack
 {
 
-  GSLIntegrator::GSLIntegrator(double _data[])
-  : Integrator(_data)
+  GSLIntegrator::GSLIntegrator(double **_parameters)
+  : Integrator(_parameters)
   {
     F.function = &function;
-
-    F.params = data;
+    
+    F.params = parameters;
 
     w = gsl_integration_workspace_alloc (1000);        
   }
@@ -46,6 +47,7 @@ namespace pmfpack
     size_t neval;
     double f1,f2,sr,aerr,error;    
     aerr = 5.e-8 / (SQRT2PI);
+
     if((*etamm) > (*etap))
     {
       status = gsl_integration_qng (&F,*etam,*etap, aerr*((*etap)-(*etam))/2.,0.,&f1, &error, &neval) ;
@@ -53,7 +55,7 @@ namespace pmfpack
     else
     {
       status = gsl_integration_qng (&F, *etam, *etamm, aerr*((*etap) - (*etam)) / 2., 0., &f1, &error, &neval) ;
-      f2 = SQRT2PI * (1 - gsl_cdf_ugaussian_P(*etamm)) / data[4]; // Analythical
+      f2 = SQRT2PI * (1 - gsl_cdf_ugaussian_P(*etamm)) / (*parameters[4]); // Analythical
       f1 = f1 + f2;
     }
     

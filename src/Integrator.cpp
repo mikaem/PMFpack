@@ -23,19 +23,17 @@
 
 namespace pmfpack
 {
-  Integrator::Integrator(double _data[])
-  {
-    data = _data;
-  }
+  Integrator::Integrator(double **_parameters)
+  : parameters(_parameters){}
   
   double function(const double phi, void *params)
   {
     double y, X, z;
-    double * data = (double *) params;
+    double **data = (double **) params;
     
-    z = (data[3] * phi - data[2]) / sqrt(1 - data[3] * data[3]);
+    z = ((*data[3]) * phi - (*data[2])) / sqrt(1 - (*data[3]) * (*data[3]));
     X = erf(z);
     y = exp(-phi * phi / 2);
-    return y * X * X / data[4];
+    return y * X * X / (*data[4]);
   }    
 }

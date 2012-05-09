@@ -57,8 +57,8 @@ namespace pmfpack
       F.params = integrator;    
   }
   
-  GSL_FDF_Root::GSL_FDF_Root(double _data[], Integrator *_integrator)
-  : GSLRoot(_data, _integrator)
+  GSL_FDF_Root::GSL_FDF_Root(double **_parameters, Integrator *_integrator)
+  : GSLRoot(_parameters, _integrator)
   {
       T = gsl_root_fdfsolver_secant;
       
@@ -88,25 +88,25 @@ namespace pmfpack
     status = 0;
     iter = 0;
     xhi = 1;
-    tau0 = data[3];
+    tau0 = (*tau);
 
-// tau is kept in data[3]. We are solving for sr=sqrt(1-2*tau)
+// tau is kept in parameters[3]. We are solving for sr=sqrt(1-2*tau)
 // The initial guess is for tau. Hence this must first be converted to sr
-    (*alfa) = erfinv(1 - data[0]);
-    (*tau)  = sqrt(1 - 2*data[3]);
+    (*alfa) = erfinv(1 - (*fmean));
+    (*tau)  = sqrt(1 - 2 * (*tau));
     x0 = x = (*tau); // Initial guess    
     gsl_root_fdfsolver_set (s, &F, x0);
-    status2 = gsl_root_test_residual(data[5], 1e-15);
-    status = (fabs(data[5] / data[6]) < 1e-16) ? 0 : 1;
+    status2 = gsl_root_test_residual((*f), 1e-15);
+    status = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;
     if (status == 0 || status2 == 0){
       if (verbose == 1){
-        printf("Initial value accepted (f = %2.4e). \n", data[5]);
+        printf("Initial value accepted (f = %2.4e). \n", *f);
       }
       (*tau) = tau0; // Transform back to tau
       return -1;
     }
     if(verbose == 1){
-      printf("f %2.4e df = %2.4e %d %d\n", data[5], data[6], status2, status);
+      printf("f %2.4e df = %2.4e %d %d\n", *f, *df, status2, status);
       printf ("Root using %s method\n", gsl_root_fdfsolver_name (s));
       printf ("%-5s %10s %10s\n","iter", "root", "err");
     }
@@ -118,14 +118,14 @@ namespace pmfpack
       x = gsl_root_fdfsolver_root (s);
       if (x < 0.5){
         status = gsl_root_test_delta (x, x0, 1e-15, 1e-14);
-        status2 = gsl_root_test_residual(data[5], 1e-15);
-        status3 = (fabs(data[5] / data[6]) < 1e-16) ? 0 : 1;}
+        status2 = gsl_root_test_residual((*f), 1e-15);
+        status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
       else{
         status = gsl_root_test_delta (1-x, 1-x0, 1e-15, 1e-14);
-        status2 = gsl_root_test_residual(data[5], 1e-15);
-        status3 = (fabs(data[5] / data[6]) < 1e-16) ? 0 : 1;}
+        status2 = gsl_root_test_residual((*f), 1e-15);
+        status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
       if (verbose == 1){
-        printf ("%5d %2.12e %+2.12e %+2.12e %d %d %d\n",iter, 0.5*(1.-x*x), x-x0, data[5], status, status2, status3);
+        printf ("%5d %2.12e %+2.12e %+2.12e %d %d %d\n",iter, 0.5*(1.-x*x), x-x0, (*f), status, status2, status3);
       if (status == GSL_SUCCESS || status2 == GSL_SUCCESS || status3 == GSL_SUCCESS){
         printf ("Converged:\n");
         printf ("%5d %10.9f %+2.8e\n",iter, 0.5 * (1. - x * x), x - x0);

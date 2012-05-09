@@ -33,7 +33,7 @@ namespace pmfpack
   {
   public:
       
-    GSLIntegrator(double []);
+    GSLIntegrator(double **);
     
     ~GSLIntegrator();
     
