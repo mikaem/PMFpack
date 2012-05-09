@@ -13,7 +13,7 @@ pmf.central = False
 #double_setitem(pmf.tau, 3, 0.1) # Initial guess for tau
 pmf.verbose = 1
 #pmf.reallocate_solver(pmf.froot, 1)
-pmf.compute_tau(0)
+pmf.compute_tau(1)
 pmf.compute_tau_and_derivatives()
 
 eta = linspace(0.001, 0.999, 1000)
