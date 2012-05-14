@@ -20,18 +20,17 @@
 // Last changed: 2012-05-04
 
 #include "ChebDerivator.h"
-#include "MyMath.h"
 #include <iostream>
 
 namespace pmfpack
 {
-  ChebDerivator::ChebDerivator(bool _central, Root *_froot, Root *_fdfroot, int N)
+  ChebDerivator::ChebDerivator(bool _central, Root *_froot, Root *_fdfroot, int _cheb_order)
   : Derivator(_central, _froot, _fdfroot) 
   {
-    nc = N;
-    c  = gsl_cheb_alloc(nc);
-    c1 = gsl_cheb_alloc(nc);
-    c2 = gsl_cheb_alloc(nc);
+    cheb_order = _cheb_order;
+    c  = gsl_cheb_alloc(cheb_order);
+    c1 = gsl_cheb_alloc(cheb_order);
+    c2 = gsl_cheb_alloc(cheb_order);
     F.function = &dfunction_df;
     F.params = params;
   };
@@ -51,24 +50,26 @@ namespace pmfpack
 
     fmean0 = (*fmean);
     im0 = (*im);
-    sigma0 = (*sigma);
-    
-    alfa0 = erfinv(1-fmean0);
+    sigma0 = (*sigma);    
 //     fmean0 = gsl_min(fmean0, 1-fmean0);
     dh = gsl_min(sigma0, fmean0 - im0);
     dh = gsl_min(dh, fabs(((1 - 2 * fmean0) + sqrt(1 - 4 * sigma0)) / 2));
     dh = gsl_min(dh, fabs(((1 - 2 * fmean0) - sqrt(1 - 4 * sigma0)) / 2));
     dh = gsl_min(1e-3, dh * 0.2);
     
+    // Compute central tau first using a robust bracketing algorithm
+    params->froot->compute(0);
     F.function = &dfunction_df;
     gsl_cheb_init(c, &F, -dh, dh);
     gsl_cheb_calc_deriv(c1, c);  // First derivative
     gsl_cheb_calc_deriv(c2, c1); // Second derivative
-    error = fabs(nc * nc * c->c[nc-1]); // Approx error in first derivative
-//    error1 = fabs(nc * nc * c1->c[nc-1]); // Approx error in second derivative
-    aerr = 0.;
-    for(int i=0; i<=nc; i++) aerr += fabs(c->c[i]);
-    if (verbose) std::cout << "Chebyshev error fmean: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
+    error = fabs(cheb_order * cheb_order * c->c[cheb_order-1]); // Approx error in first derivative
+//    error1 = fabs(cheb_order * cheb_order * c1->c[cheb_order-1]); // Approx error in second derivative
+    if (verbose){
+      aerr = 0.;
+      for(int i=0; i<=cheb_order; i++) aerr += fabs(c->c[i]);
+      std::cout << "Chebyshev error fmean: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
+    }
     (*tau) = gsl_cheb_eval(c, 0);
     (*dtaudf)    = gsl_cheb_eval(c1, 0);
     (*d2taudfdf) = gsl_cheb_eval(c2, 0);
@@ -77,11 +78,13 @@ namespace pmfpack
     gsl_cheb_init(c, &F, -dh, dh);    
     gsl_cheb_calc_deriv(c1, c);
     gsl_cheb_calc_deriv(c2, c1);
-    error = fabs(nc * nc * c->c[nc-1]); // Approx error in derivative
-//     error1 = fabs(nc * nc * c1->c[nc-1]); // Approx error in second derivative
-    aerr = 0.;
-    for(int i=0; i<=nc; i++) aerr += fabs(c1->c[i]);
-    if (verbose) std::cout << "Chebyshev error sigma: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
+    error = fabs(cheb_order * cheb_order * c->c[cheb_order-1]); // Approx error in derivative
+//     error1 = fabs(cheb_order * cheb_order * c1->c[cheb_order-1]); // Approx error in second derivative
+    if (verbose){
+      aerr = 0.;
+      for(int i=0; i<=cheb_order; i++) aerr += fabs(c1->c[i]);
+      std::cout << "Chebyshev error sigma: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
+    }
     (*dtauds)    = gsl_cheb_eval(c1, 0);
     (*d2taudsds) = gsl_cheb_eval(c2, 0);
     

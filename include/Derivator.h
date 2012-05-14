@@ -22,7 +22,6 @@
 #ifndef __DERIVATOR_H
 #define __DERIVATOR_H
 
-#include "MyMath.h"
 #include "Root.h"
 
 namespace pmfpack

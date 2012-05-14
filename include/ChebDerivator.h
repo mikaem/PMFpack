@@ -38,7 +38,7 @@ namespace pmfpack
       
     virtual double compute(int);
     
-    int nc;
+    int cheb_order;
     
     gsl_cheb_series *c, *c1, *c2;
     
