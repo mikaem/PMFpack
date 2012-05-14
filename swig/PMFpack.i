@@ -24,7 +24,6 @@
 #define SWIG_FILE_WITH_INIT
 #include "numpy/arrayobject.h"
 #include "PMF.h"
-#include "convert2py.h"
 using namespace pmfpack;
 %}
 
