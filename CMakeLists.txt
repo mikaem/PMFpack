@@ -33,6 +33,6 @@ string(STRIP GSL_LIBRARIES "${GSL_LIBRARIES}")
 target_link_libraries(PMF ${GSL_LIBRARIES})
 install(TARGETS PMF DESTINATION lib)
 
-add_subdirectory(test)
+add_subdirectory(demo)
 
 add_subdirectory(swig)
