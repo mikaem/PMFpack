@@ -43,7 +43,7 @@ namespace pmfpack
   {
     int status;
     size_t neval;
-    double f1,f2,sr,aerr,error;    
+    double f1, f2, sr, aerr, error;    
     aerr = 5.e-8 / (SQRT2PI);
 
     if((*etamm) > (*etap))
