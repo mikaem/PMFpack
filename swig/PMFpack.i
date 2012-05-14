@@ -16,8 +16,8 @@
 // along with PMFpack. If not, see <http://www.gnu.org/licenses/>.
 //
 //
-// First added:  2012-05-04
-// Last changed: 2012-05-04
+// First added:  2012-05-14
+// Last changed: 2012-05-14
 
 %module PMFpack
 %{

@@ -357,6 +357,8 @@ namespace pmfpack
     double *phi,*EXV;
 
     assert(N1 == N2);
+    EXV = (double *) malloc(N1 * sizeof(double));
+    phi = (double *) malloc(N1 * sizeof(double));
     tm = 1. - tau;
     tm2 = 1. - 2. * tau;
     ALFA2 = alfa * alfa / 2. / tm;
@@ -368,6 +370,8 @@ namespace pmfpack
       phi[i] = alfa + SQRT2t * EXV[i];
     for (int i = N1; i--;)
       p[i] = R1 * (phi[i] / tm2 + EXV[i] / SQRT2t) * exp(- EXV[i] * EXV[i] / 2.);
+    free(EXV);
+    free(phi);
   }
   
   void PMF::CV(double eta, double *cv, int N1)
