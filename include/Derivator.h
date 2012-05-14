@@ -16,32 +16,41 @@
 // along with PMFpack. If not, see <http://www.gnu.org/licenses/>.
 //
 //
-// First added:  2012-05-04
-// Last changed: 2012-05-04
+// First added:  2012-05-11
+// Last changed: 2012-05-11
 
-%module PMFpack
-%{
-#define SWIG_FILE_WITH_INIT
-#include "numpy/arrayobject.h"
-#include "PMF.h"
-#include "convert2py.h"
-using namespace pmfpack;
-%}
+#ifndef __DERIVATOR_H
+#define __DERIVATOR_H
 
-%include "numpy.i"
+#include "MyMath.h"
+#include "Root.h"
 
-%init %{
-  import_array();
+namespace pmfpack
+{
+  struct Params
+  {
+    Root *froot, *fdfroot;
+    bool central;
+  };
+  
+  double dfunction_df(const double, void *);
+  double dfunction_ds(const double, void *);
 
-%}
+  class Derivator
+  {
+  public:
+    Derivator(bool, Root *, Root *);
+            
+    ~Derivator() {};        
+    
+    virtual double compute(int) = 0;
+    
+    double *fmean, *sigma, *alfa, *tau, *im;
+    double *dtaudf, *dtauds, *d2taudfdf, *d2taudsds;
+    
+    Params *params;
+        
+  };
+}
 
-%feature("autodoc",1);
-
-%include "carrays.i"
-%array_functions(double,double);
-%array_functions(int,int);
-%array_functions(double*,doublep);
-
-%apply (double* INPLACE_ARRAY1, int DIM1) {(double*, int ), (double*, int)};
-%apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double*, int, int)};
-%include PMF.h
+#endif

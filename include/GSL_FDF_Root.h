@@ -35,7 +35,7 @@ namespace pmfpack
   public:
     GSL_FDF_Root();
     
-    GSL_FDF_Root(double **, Integrator *);
+    GSL_FDF_Root(Integrator *);
     
     ~GSL_FDF_Root();
             

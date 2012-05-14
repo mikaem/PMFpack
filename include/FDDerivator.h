@@ -19,29 +19,25 @@
 // First added:  2012-05-04
 // Last changed: 2012-05-04
 
-%module PMFpack
-%{
-#define SWIG_FILE_WITH_INIT
-#include "numpy/arrayobject.h"
-#include "PMF.h"
-#include "convert2py.h"
-using namespace pmfpack;
-%}
+#ifndef __FDDERIVATOR_H
+#define __FDDERIVATOR_H
 
-%include "numpy.i"
+#include "Derivator.h"
 
-%init %{
-  import_array();
+namespace pmfpack
+{
 
-%}
+  class FDDerivator : public Derivator 
+  {
+  public:
+    
+    FDDerivator(bool, Root *, Root *);
+            
+    ~FDDerivator() {};        
+      
+    virtual double compute(int);
+                      
+  };
+}
 
-%feature("autodoc",1);
-
-%include "carrays.i"
-%array_functions(double,double);
-%array_functions(int,int);
-%array_functions(double*,doublep);
-
-%apply (double* INPLACE_ARRAY1, int DIM1) {(double*, int ), (double*, int)};
-%apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double*, int, int)};
-%include PMF.h
+#endif

@@ -43,34 +43,23 @@ namespace pmfpack{
   GSL_F_Root::GSL_F_Root()
   : GSLRoot()
   {
-    T = gsl_root_fsolver_brent;
-        
+    T = gsl_root_fsolver_brent;        
     s = gsl_root_fsolver_alloc(T);
-
-    F.function = &func;
-        
+    F.function = &func;        
     F.params = integrator;
-    
-    lower = 1.e-3;
-    
+    lower = 1.e-3;    
     upper = 1.-1.e-6;
   }
 
-  GSL_F_Root::GSL_F_Root(double **_parameters, Integrator *_integrator)
-  : GSLRoot(_parameters, _integrator)
+  GSL_F_Root::GSL_F_Root(Integrator *_integrator)
+  : GSLRoot(_integrator)
   {
-    T = gsl_root_fsolver_brent;
-        
+    T = gsl_root_fsolver_brent;        
     s = gsl_root_fsolver_alloc(T);
-
-    F.function = &func;
-    
-    F.params = integrator;
-    
-    lower = 1.e-3;
-    
-    upper = 1.-1.e-6;
-    
+    F.function = &func;    
+    F.params = integrator;    
+    lower = 1.e-3;    
+    upper = 1.-1.e-6;    
   }
     
   GSL_F_Root::~GSL_F_Root()

@@ -19,29 +19,32 @@
 // First added:  2012-05-04
 // Last changed: 2012-05-04
 
-%module PMFpack
-%{
-#define SWIG_FILE_WITH_INIT
-#include "numpy/arrayobject.h"
-#include "PMF.h"
-#include "convert2py.h"
-using namespace pmfpack;
-%}
+#ifndef __CHEBDERIVATOR_H
+#define __CHEBDERIVATOR_H
 
-%include "numpy.i"
+#include "Derivator.h"
+#include <gsl/gsl_chebyshev.h>
 
-%init %{
-  import_array();
+namespace pmfpack
+{
 
-%}
+  class ChebDerivator : public Derivator 
+  {
+  public:
+    
+    ChebDerivator(bool, Root *, Root *, int);
+            
+    ~ChebDerivator();
+      
+    virtual double compute(int);
+    
+    int nc;
+    
+    gsl_cheb_series *c, *c1, *c2;
+    
+    gsl_function F;
 
-%feature("autodoc",1);
+  };
+}
 
-%include "carrays.i"
-%array_functions(double,double);
-%array_functions(int,int);
-%array_functions(double*,doublep);
-
-%apply (double* INPLACE_ARRAY1, int DIM1) {(double*, int ), (double*, int)};
-%apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double*, int, int)};
-%include PMF.h
+#endif

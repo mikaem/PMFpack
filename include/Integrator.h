@@ -37,6 +37,9 @@ namespace pmfpack
     
     double **parameters;
     
+    double *fmean, *sigma, *alfa, *tau, *im, *f, *df;
+    double *dtaudf, *dtauds, *d2taudfdf, *d2taudsds;
+    
     virtual double compute(const double*, const double*, const double*) = 0;
     
   };

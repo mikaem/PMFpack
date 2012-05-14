@@ -19,7 +19,6 @@ int main()
 //    pmf->initial_guess(0.2);
 //    pmf->froot->error_message_off();
     pmf->verbose = 1;
-    pmf->compute_tau(0);
-    pmf->compute_tau_and_derivatives();
+    pmf->compute(0, true);
       
 }

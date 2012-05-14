@@ -29,10 +29,8 @@ namespace pmfpack
   GSLIntegrator::GSLIntegrator(double **_parameters)
   : Integrator(_parameters)
   {
-    F.function = &function;
-    
+    F.function = &function;    
     F.params = parameters;
-
     w = gsl_integration_workspace_alloc (1000);        
   }
   

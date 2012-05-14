@@ -35,6 +35,9 @@
 #include "GSL_FDF_Root.h"
 #include "Integrator.h"
 #include "GSLIntegrator.h"
+#include "Derivator.h"
+#include "FDDerivator.h"
+#include "ChebDerivator.h"
 
 namespace pmfpack
 {
@@ -43,14 +46,13 @@ namespace pmfpack
   public:
     PMF() {};
     
-    PMF(double fmean, double sigma, int fsolver=0, int fdfsolver=0, int integral=0);
+    PMF(double fmean, double sigma, int fsolver=0, int fdfsolver=0, int integral=0, int derivator=0);
     
     ~PMF();
     
     double fmean, sigma, alfa, tau, im, f, df;    
-    double* parameters[7];  // pointers to the parameters above
-
     double dtaudf, dtauds, d2taudfdf, d2taudsds;
+    double* parameters[11];  // pointers to the parameters above
         
     double grad_f[3], grad_s[3]; // Gradients of fmean and sigma
     
@@ -62,9 +64,13 @@ namespace pmfpack
     
     Root *froot, *fdfroot;
     
+    Derivator *derivator;
+    
     int verbose;
     
     bool central;
+    
+    int cheb_order; // Order of Chebyshev approximations used in derivatives
     
     void set_parameters(double, double);
     
@@ -76,24 +82,29 @@ namespace pmfpack
     
     void set_fdfsolver(int);
     
+    void set_derivator(int);
+    
     void reallocate_solver(Root *, int);    
 
     void set_integrator(int);
     
-    void compute_tau(int);
+    void compute(int, bool);
     
-    void compute_tau_and_derivatives();
-          
-    double PDF(double);
-    
+    // Conditional models
+    double PDF(double);    
     void PDF(double *, int, double *, int);
     
-    double counterflow(double);
-    
+    double counterflow(double);    
     void counterflow(double *, int, double *, int);
     
+    double CSD(double);
     void CSD(double *, int, double *, int);
     
+    double Laplace(double);
+    void Laplace(double *, int, double *, int);
+        
+    void CV(double, double *, int);    
+    void CV(double *, int, double *, int, int);
   };
 }
 

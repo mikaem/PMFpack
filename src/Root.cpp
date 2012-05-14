@@ -31,9 +31,10 @@ namespace pmfpack
     max_iteration = 100;    
   }
   
-  Root::Root(double **_parameters, Integrator *_integrator)
-  : integrator(_integrator), parameters(_parameters)
+  Root::Root(Integrator *_integrator)
+  : integrator(_integrator)
   {
+    parameters = integrator->parameters;
     max_iteration = 100;
     fmean = parameters[0];
     sigma = parameters[1];
@@ -41,7 +42,7 @@ namespace pmfpack
     tau   = parameters[3];
     im    = parameters[4];
     f     = parameters[5];
-    df    = parameters[6];
+    df    = parameters[6];    
   }
         
   double func(double x, void *params)
@@ -117,7 +118,5 @@ namespace pmfpack
     
     (*f) = (*data[5]);
     (*df) = (*data[6]);  
-
-    return;
   }
 }

@@ -44,32 +44,22 @@ namespace pmfpack
   GSL_FDF_Root::GSL_FDF_Root()
   : GSLRoot()
   {
-      T = gsl_root_fdfsolver_secant;
-      
-      s = gsl_root_fdfsolver_alloc(T);
-      
-      F.f = &func;
-      
-      F.df = &dfunc;
-            
-      F.fdf = &fdfunc;
-      
+      T = gsl_root_fdfsolver_secant;      
+      s = gsl_root_fdfsolver_alloc(T);      
+      F.f = &func;      
+      F.df = &dfunc;            
+      F.fdf = &fdfunc;      
       F.params = integrator;    
   }
   
-  GSL_FDF_Root::GSL_FDF_Root(double **_parameters, Integrator *_integrator)
-  : GSLRoot(_parameters, _integrator)
+  GSL_FDF_Root::GSL_FDF_Root(Integrator *_integrator)
+  : GSLRoot(_integrator)
   {
-      T = gsl_root_fdfsolver_secant;
-      
-      s = gsl_root_fdfsolver_alloc(T);
-      
-      F.f = &func;
-      
-      F.df = &dfunc;
-            
-      F.fdf = &fdfunc;
-      
+      T = gsl_root_fdfsolver_secant;      
+      s = gsl_root_fdfsolver_alloc(T);      
+      F.f = &func;      
+      F.df = &dfunc;            
+      F.fdf = &fdfunc;      
       F.params = integrator;    
   }
   
@@ -106,9 +96,8 @@ namespace pmfpack
       return -1;
     }
     if(verbose == 1){
-      printf("f %2.4e df = %2.4e %d %d\n", *f, *df, status2, status);
-      printf ("Root using %s method\n", gsl_root_fdfsolver_name (s));
-      printf ("%-5s %10s %10s\n","iter", "root", "err");
+      std::cout << "Root using " << gsl_root_fdfsolver_name(s) << " method" << std::endl;
+      std::cout << "Iter      root         error             f  " << std::endl;
     }
     do  
     {
@@ -125,10 +114,9 @@ namespace pmfpack
         status2 = gsl_root_test_residual((*f), 1e-15);
         status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
       if (verbose == 1){
-        printf ("%5d %2.12e %+2.12e %+2.12e %d %d %d\n",iter, 0.5*(1.-x*x), x-x0, (*f), status, status2, status3);
+        std::cout << setprecision(6) << std::setw(4) << iter << std::setw(14) << 0.5*(1.-x*x) << std::setw(14) << x-x0 << std::setw(14) << (*f) << std::endl;
       if (status == GSL_SUCCESS || status2 == GSL_SUCCESS || status3 == GSL_SUCCESS){
-        printf ("Converged:\n");
-        printf ("%5d %10.9f %+2.8e\n",iter, 0.5 * (1. - x * x), x - x0);
+        std::cout << "Converged, root = " << 0.5 * (1. - x * x) << std::endl;
         status = GSL_SUCCESS;
         }
       }

@@ -23,8 +23,21 @@
 
 namespace pmfpack
 {
-  Integrator::Integrator(double **_parameters)
-  : parameters(_parameters){}
+  Integrator::Integrator(double *_parameters[])
+  : parameters(_parameters)
+  {
+    fmean = _parameters[0];
+    sigma = _parameters[1];
+    alfa  = _parameters[2];
+    tau   = _parameters[3];
+    im    = _parameters[4];
+    f     = _parameters[5];
+    df    = _parameters[6];
+    dtaudf    = _parameters[7];
+    dtauds    = _parameters[8];
+    d2taudfdf = _parameters[9];
+    d2taudsds = _parameters[10];
+  }
   
   double function(const double phi, void *params)
   {

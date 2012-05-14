@@ -23,6 +23,7 @@
 #define __ROOT_H
 
 #include <iostream>
+#include <iomanip>
 #include "Integrator.h"
 #include "GSLIntegrator.h"
 #include "MyMath.h"
@@ -41,7 +42,7 @@ namespace pmfpack
                       
     Root();
     
-    Root(double **, Integrator *);
+    Root(Integrator *);
     
     ~Root() {};    
     
@@ -56,6 +57,8 @@ namespace pmfpack
     double **parameters;
     
     double *fmean, *sigma, *alfa, *tau, *im, *f, *df;
+    
+    bool central;
     
     Integrator *integrator;
       
