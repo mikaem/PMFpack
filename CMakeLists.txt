@@ -26,10 +26,22 @@ list(APPEND SOURCES ${C_SOURCES})
 
 add_definitions("-fPIC")
 # Dependency
-find_package(GSL)
+Find_package(GSL)
+#set(Boost_USE_STATIC_LIBS        ON)
+#find_package(Boost)
+#find_package(Boost COMPONENTS filesystem program_options system thread iostreams math_tr1 REQUIRED)
+
+# MESSAGE("Boost information: ${Boost_FOUND}") 
+# MESSAGE("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIR}") 
+# MESSAGE("  Boost_LIBRARIES: ${Boost_LIBRARIES}") 
+# MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
+ 
+#include_directories(${Boost_INCLUDE_DIR} ${GSL_INCLUDE_DIRS})
 include_directories(${GSL_INCLUDE_DIRS})
+#link_directories(${Boost_LIBRARY_DIRS})
 add_library(PMF ${HEADERS} ${SOURCES})
 string(STRIP GSL_LIBRARIES "${GSL_LIBRARIES}")
+# target_link_libraries(PMF ${GSL_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(PMF ${GSL_LIBRARIES})
 install(TARGETS PMF DESTINATION lib)
 

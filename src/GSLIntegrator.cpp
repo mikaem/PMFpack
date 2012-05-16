@@ -20,7 +20,6 @@
 // Last changed: 2012-05-04
 
 #include "GSLIntegrator.h"
-#include "MyMath.h"
 #include <iostream>
 
 namespace pmfpack
@@ -39,22 +38,29 @@ namespace pmfpack
     gsl_integration_workspace_free(w);
   }
   
-  double GSLIntegrator::compute(const double* etam,const double* etamm,const double* etap)
+  double GSLIntegrator::compute()
   {
     int status;
+    double etam, etamm, etap, f1, f2, aerr, error;    
     size_t neval;
-    double f1, f2, sr, aerr, error;    
-    aerr = 5.e-8 / (SQRT2PI);
+    
+    aerr = 5.e-8 / (SQRT2PI);    
+    // Limits of the integration
+    etap = 9;    
+    etam = FMAX(((*alfa) + sqrt(1 - (*tau) * (*tau)) * NIM8) / (*tau), -8);
+    etamm = ((*alfa) + sqrt(1 - (*tau) * (*tau)) * (-NIM15)) / (*tau);
+//    etam = FMAX(((*alfa) + sqrt(1. - (*tau) * (*tau)) * normsinv(1.e-7)) / (*tau), -7.);
+//    etam = ((*alfa) + sqrt(1. - (*tau) * (*tau)) * normsinv(1.e-7)) / (*tau);
 
-    if((*etamm) > (*etap))
+    if (etamm > etap)
     {
-      status = gsl_integration_qng (&F,*etam,*etap, aerr*((*etap)-(*etam))/2.,0.,&f1, &error, &neval) ;
+      status = gsl_integration_qng (&F, etam, etap, aerr * (etap - etam) / 2., 0., &f1, &error, &neval) ;
     }
     else
     {
-      status = gsl_integration_qng (&F, *etam, *etamm, aerr*((*etap) - (*etam)) / 2., 0., &f1, &error, &neval) ;
-      f2 = SQRT2PI * (1 - gsl_cdf_ugaussian_P(*etamm)) / (*parameters[4]); // Analythical
-      f1 = f1 + f2;
+      status = gsl_integration_qng (&F, etam, etamm, aerr * (etap - etam) / 2., 0., &f1, &error, &neval) ;
+      f2 = SQRT2PI * (1 - erf(etamm)) / (*im); // Analythical
+      f1 += f2;
     }
     
     return f1;

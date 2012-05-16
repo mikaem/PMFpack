@@ -81,6 +81,11 @@ namespace pmfpack
     {
       froot = new GSL_F_Root(integrator);
     }
+    else if (fsolver == 1)
+    {
+      std::cout << "Boost fsolver " << std::endl; 
+      froot = new Boost_F_Root(integrator);
+    }
     else
     {
       std::cout << " Not implemented fsolver \n" << std::endl;
@@ -94,6 +99,11 @@ namespace pmfpack
     if (fdfsolver == 0)
     {
       fdfroot = new GSL_FDF_Root(integrator);
+    }
+    else if (fdfsolver == 1)
+    {
+      std::cout << "Boost fdfsolver " << std::endl; 
+      fdfroot = new Boost_FDF_Root(integrator);
     }
     else
     {

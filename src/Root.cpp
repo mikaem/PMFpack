@@ -47,18 +47,13 @@ namespace pmfpack
         
   double func(double x, void *params)
   {
-    double etam, etamm, etap, f1;            
+    double f1;            
     Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
     
     (*data[3]) = x;
-    etap = 9;
-    etam = FMAX(((*data[2]) + sqrt(1 - x * x) * NIM8) / x, -8);
-    etamm = ((*data[2]) + sqrt(1 - x * x) * (-NIM15)) / x;
-//    etam = FMAX((data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x, -7.);
-//    etam = (data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x;
 
-    f1 = integrator->compute(&etam, &etamm, &etap);    
+    f1 = integrator->compute();
 
     (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 
 
@@ -67,7 +62,7 @@ namespace pmfpack
   
   double dfunc(double x, void *params)
   {
-    double etam, etamm, etap, f1, f2, hf;            
+    double f1, f2, hf;            
     Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
         
@@ -75,15 +70,9 @@ namespace pmfpack
     hf = FMIN(1e-5, (*data[3]) * 1e-3);
     hf = FMIN(hf, (1. - (*data[3])) * 1.e-3);
     
-    etap = 9;
-    etam = FMAX(((*data[2]) + sqrt(1 - x * x) * NIM8) / x, -8);
-    etamm = ((*data[2]) + sqrt(1 - x * x) * (-NIM15)) / x;
-//    etam = FMAX((data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x, -7.);
-//    etam = (data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x;
-
-    f1 = integrator->compute(&etam, &etamm, &etap);
+    f1 = integrator->compute();
     (*data[3]) -= hf;
-    f2 = integrator->compute(&etam, &etamm, &etap);
+    f2 = integrator->compute();
     
     (*data[3]) = x;
     (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 
@@ -94,7 +83,7 @@ namespace pmfpack
   
   void fdfunc(double x, void *params, double *f, double *df)
   {
-    double etam, etamm, etap, f1, f2, hf;            
+    double f1, f2, hf;            
     Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
         
@@ -102,15 +91,9 @@ namespace pmfpack
     hf = FMIN(1e-5, (*data[3]) * 1e-3);
     hf = FMIN(hf, (1. - (*data[3])) * 1.e-3);
     
-    etap = 9;
-    etam = FMAX(((*data[2]) + sqrt(1 - x * x) * NIM8) / x, -8);
-    etamm = ((*data[2]) + sqrt(1 - x * x) * (-NIM15)) / x;
-//    etam = FMAX((data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x, -7.);
-//    etam = (data[2] + sqrt(1. - x * x) * normsinv(1.e-7)) / x;
-
-    f1 = integrator->compute(&etam, &etamm, &etap);
+    f1 = integrator->compute();
     (*data[3]) -= hf;
-    f2 = integrator->compute(&etam, &etamm, &etap);
+    f2 = integrator->compute();
     
     (*data[3]) = x;
     (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 

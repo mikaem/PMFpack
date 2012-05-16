@@ -24,7 +24,12 @@
 namespace pmfpack
 {
   Integrator::Integrator(double *_parameters[])
-  : parameters(_parameters) {}
+  : parameters(_parameters) 
+  {
+    alfa = parameters[2];
+    tau  = parameters[3];
+    im   = parameters[4];
+  }
   
   double function(const double phi, void *params)
   {

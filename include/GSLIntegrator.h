@@ -41,7 +41,7 @@ namespace pmfpack
         
     gsl_integration_workspace *w;
     
-    virtual double compute(const double*, const double*, const double*);
+    virtual double compute();
                       
   };
 }

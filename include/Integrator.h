@@ -37,7 +37,9 @@ namespace pmfpack
     
     double **parameters;
     
-    virtual double compute(const double*, const double*, const double*) = 0;
+    double *tau, *alfa, *im;
+    
+    virtual double compute() = 0;
     
   };
 }

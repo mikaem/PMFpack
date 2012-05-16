@@ -3,7 +3,7 @@ from numpy import linspace, zeros
 from pylab import plot, show
 fm = 0.70837758
 sigma = 0.194360748 * fm * (1 - fm)
-pmf = PMF(fm, sigma, 0, 0, 0, 1)
+pmf = PMF(fm, sigma, 1, 0, 0, 1)
 pmf.set_fmean_gradient(-0.3496497, 0, 0)
 pmf.set_sigma_gradient(-0.4294126, 0, 0)
 pmf.chi = 1.003770
