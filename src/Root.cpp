@@ -45,25 +45,22 @@ namespace pmfpack
     df    = parameters[6];    
   }
         
-  double func(double x, void *params)
+  double func(double x, Integrator *integrator)
   {
-    double f1;            
-    Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
     
     (*data[3]) = x;
 
-    f1 = integrator->compute();
+    double f1 = integrator->compute();
 
     (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 
 
     return (*data[5]);
   }
   
-  double dfunc(double x, void *params)
+  double dfunc(double x, Integrator *integrator)
   {
     double f1, f2, hf;            
-    Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
         
     (*data[3]) = x;
@@ -81,10 +78,9 @@ namespace pmfpack
     return (*data[6]);
   }
   
-  void fdfunc(double x, void *params, double *f, double *df)
+  void fdfunc(double x, Integrator *integrator, double *f, double *df)
   {
     double f1, f2, hf;            
-    Integrator *integrator = (Integrator *) params;    
     double **data = integrator->parameters;
         
     (*data[3]) = x;
@@ -99,6 +95,29 @@ namespace pmfpack
     (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 
     (*data[6]) = (f2 - f1) / hf / SQRT2PI;
     
+    (*f) = (*data[5]);
+    (*df) = (*data[6]);  
+  }
+  
+  void fd2func(double x, Integrator *integrator, double *f, double *df, double *d2f)
+  {
+    double f1, f2, f3, hf;            
+    double **data = integrator->parameters;
+        
+    (*data[3]) = x;
+    hf = FMIN(1e-5, (*data[3]) * 1e-3);
+    hf = FMIN(hf, (1. - (*data[3])) * 1.e-3);
+    
+    f1 = integrator->compute();
+    (*data[3]) -= hf;
+    f2 = integrator->compute();
+    (*data[3]) += 2 * hf;
+    f3 = integrator->compute();
+    
+    (*data[3]) = x;
+    (*data[5]) = 1 - f1 / SQRT2PI; // Store the function value 
+    (*data[6]) = (f2 - f3) / 2. / hf / SQRT2PI;    
+    (*d2f) = - (f2 - 2 * f1 + f3) / hf / hf / SQRT2PI;    
     (*f) = (*data[5]);
     (*df) = (*data[6]);  
   }

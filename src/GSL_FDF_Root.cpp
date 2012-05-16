@@ -46,9 +46,9 @@ namespace pmfpack
   {
       T = gsl_root_fdfsolver_secant;      
       s = gsl_root_fdfsolver_alloc(T);      
-      F.f = &func;      
-      F.df = &dfunc;            
-      F.fdf = &fdfunc;      
+      F.f = &gslfunc;      
+      F.df = &gsldfunc;            
+      F.fdf = &gslfdfunc;      
       F.params = integrator;    
   }
   
@@ -57,9 +57,9 @@ namespace pmfpack
   {
       T = gsl_root_fdfsolver_secant;      
       s = gsl_root_fdfsolver_alloc(T);      
-      F.f = &func;      
-      F.df = &dfunc;            
-      F.fdf = &fdfunc;      
+      F.f = &gslfunc;      
+      F.df = &gsldfunc;            
+      F.fdf = &gslfdfunc;      
       F.params = integrator;    
   }
   

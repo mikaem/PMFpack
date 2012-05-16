@@ -30,11 +30,10 @@
 
 namespace pmfpack
 {
-  double func(double, void *);
-  
-  double dfunc(double, void *);
-  
-  void fdfunc(double, void *, double *, double *);
+  double func(double, Integrator*);
+  double dfunc(double, Integrator*);
+  void fdfunc(double, Integrator*, double *, double *);
+  void fd2func(double, Integrator*, double *, double *, double *);
   
   class Root
   {

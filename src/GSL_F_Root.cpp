@@ -45,7 +45,7 @@ namespace pmfpack{
   {
     T = gsl_root_fsolver_brent;        
     s = gsl_root_fsolver_alloc(T);
-    F.function = &func;        
+    F.function = &gslfunc;        
     F.params = integrator;
     lower = 1.e-3;    
     upper = 1.-1.e-6;
@@ -56,7 +56,7 @@ namespace pmfpack{
   {
     T = gsl_root_fsolver_brent;        
     s = gsl_root_fsolver_alloc(T);
-    F.function = &func;    
+    F.function = &gslfunc;    
     F.params = integrator;    
     lower = 1.e-3;    
     upper = 1.-1.e-6;    

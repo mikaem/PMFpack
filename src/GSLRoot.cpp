@@ -33,6 +33,23 @@ namespace pmfpack{
     fflush (stderr);
     return;
   }
+  
+  double gslfunc(double x, void *params)
+  {
+    Integrator *integrator = (Integrator *) params;
+    return func(x, integrator);    
+  }
+  double gsldfunc(double x, void *params)
+  {
+    Integrator *integrator = (Integrator *) params;
+    return dfunc(x, integrator);    
+  }
+  void gslfdfunc(double x, void *params, double *f, double *df)
+  {
+    Integrator *integrator = (Integrator *) params;
+    fdfunc(x, integrator, f, df);    
+  }
+
 
   GSLRoot::GSLRoot()
   : Root()

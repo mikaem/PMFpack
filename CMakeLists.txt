@@ -24,24 +24,17 @@ list(APPEND SOURCES ${CPP_SOURCES})
 file(GLOB C_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 list(APPEND SOURCES ${C_SOURCES})
 
-add_definitions("-fPIC")
+list(APPEND PMF_CXX_DEFINITIONS "-fPIC")
+if (CMAKE_BUILD_TYPE STREQUAL "Developer" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+  list(APPEND PMF_CXX_DEFINITIONS "-DBOOST_MATH_INSTRUMENT")
+endif()
+
 # Dependency
 Find_package(GSL)
-#set(Boost_USE_STATIC_LIBS        ON)
-#find_package(Boost)
-#find_package(Boost COMPONENTS filesystem program_options system thread iostreams math_tr1 REQUIRED)
-
-# MESSAGE("Boost information: ${Boost_FOUND}") 
-# MESSAGE("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIR}") 
-# MESSAGE("  Boost_LIBRARIES: ${Boost_LIBRARIES}") 
-# MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
- 
-#include_directories(${Boost_INCLUDE_DIR} ${GSL_INCLUDE_DIRS})
+add_definitions(${PMF_CXX_DEFINITIONS})
 include_directories(${GSL_INCLUDE_DIRS})
-#link_directories(${Boost_LIBRARY_DIRS})
 add_library(PMF ${HEADERS} ${SOURCES})
 string(STRIP GSL_LIBRARIES "${GSL_LIBRARIES}")
-# target_link_libraries(PMF ${GSL_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(PMF ${GSL_LIBRARIES})
 install(TARGETS PMF DESTINATION lib)
 

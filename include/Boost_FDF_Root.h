@@ -28,17 +28,32 @@ namespace pmfpack
 {
   struct BoostF2Function
   {
-    BoostF2Function(void *a, void (*f)(double, void*, double*, double*)) 
-    : params(a), func(f) {};
+    BoostF2Function(Integrator *a, void (*f)(double, Integrator*, double*, double*)) 
+    : integrator(a), func(f) {};
     boost::math::tuple<double, double> operator ()(double const& z) 
       {
         double ff, dff;
-        func(z, params, &ff, &dff);
-        return boost::math::make_tuple(ff, dff);        
+        func(z, integrator, &ff, &dff);
+        return boost::math::make_tuple(ff, dff);
       };
   private:
-    boost::function<void (double, void*, double*, double*)> func;
-    void *params;
+    boost::function<void (double, Integrator*, double*, double*)> func;
+    Integrator *integrator;
+  };
+
+  struct BoostF3Function
+  {
+    BoostF3Function(Integrator *a, void (*f)(double, Integrator*, double*, double*, double*)) 
+    : integrator(a), func(f) {};
+    boost::math::tuple<double, double, double> operator ()(double const& z) 
+      {
+        double ff, dff, df2;
+        func(z, integrator, &ff, &dff, &df2);
+        return boost::math::make_tuple(ff, dff, df2);
+      };
+  private:
+    boost::function<void (double, Integrator*, double*, double*, double*)> func;
+    Integrator *integrator;
   };
   
   class Boost_FDF_Root : public BoostRoot
@@ -50,11 +65,15 @@ namespace pmfpack
     
     ~Boost_FDF_Root();
             
-    BoostF2Function *F;
+    BoostF2Function *F2;
+    
+    BoostF3Function *F3;
     
     int fdfsolver;
     
     int digits;
+    
+    void set_digits(const uint);
     
     boost::uintmax_t maxiter;
     

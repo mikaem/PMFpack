@@ -29,6 +29,9 @@
 namespace pmfpack
 {
   void my_error_handler (const char *, const char *, int, int);
+  double gslfunc(double x, void *params);
+  double gsldfunc(double x, void *params);
+  void gslfdfunc(double x, void *params, double *f, double *df);
 
   class GSLRoot : public Root
   {

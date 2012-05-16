@@ -28,15 +28,15 @@ namespace pmfpack
 {
   struct BoostFunction
   {
-    BoostFunction(void *a, double (*f)(double, void*)) 
-    : params(a), func(f) {};
+    BoostFunction(Integrator *a, double (*f)(double, Integrator*)) 
+    : integrator(a), func(f) {};
     double operator ()(double const& z) 
       {
-        return func(z, params);        
+        return func(z, integrator);        
       };
   private:
-    boost::function<double (double, void*)> func;
-    void *params;
+    boost::function<double (double, Integrator*)> func;
+    Integrator *integrator;
   };
   
   class tolerance {

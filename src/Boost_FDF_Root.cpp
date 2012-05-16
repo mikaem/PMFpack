@@ -28,17 +28,20 @@ namespace pmfpack{
   Boost_FDF_Root::Boost_FDF_Root(Integrator *_integrator)
   : BoostRoot(_integrator)
   {
-    F = new BoostF2Function(integrator, &fdfunc);
+    F2 = new BoostF2Function(integrator, &fdfunc);
+    F3 = new BoostF3Function(integrator, &fd2func);
     lower = 1.e-3;    
     upper = 1.-1.e-6;    
     fdfsolver = 0;
     maxiter = 100;
-    digits = std::numeric_limits<double>::digits;
+//     digits = std::numeric_limits<double>::digits/2;
+    digits = 48;
   }
     
   Boost_FDF_Root::~Boost_FDF_Root()
   {
-    delete F;  
+    delete F2;
+    delete F3;  
   }
 
   void Boost_FDF_Root::realloc(const unsigned int f)
@@ -46,30 +49,36 @@ namespace pmfpack{
     assert( 0 <= f <= 2);
     fdfsolver = f;
   }
+  
+  void Boost_FDF_Root::set_digits(const uint d)
+  {
+    digits = d;
+  }
 
   double Boost_FDF_Root::compute(int verbose)
   {
     double x;
+    boost::uintmax_t it;
 
     (*alfa) = erfinv(1 - (*fmean));    
+    it = maxiter;
     if (fdfsolver == 0)
     {
-      x = boost::math::tools::newton_raphson_iterate(*F, sqrt(1 - 2 * (*tau)), lower, upper, digits);
+      x = boost::math::tools::newton_raphson_iterate(*F2, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
       if (verbose) std::cout << " Boost Newton Raphson " << std::endl;
     }
     else if (fdfsolver == 1)
     {
-//       found = boost::math::tools::bracket_and_solve_root(*F, sqrt(1 - 2 * (*tau)), 1.1, false, *tol, maxiter);
-//       if (verbose) std::cout << " Boost bracket_and_solve_root " << std::endl;
+      x = boost::math::tools::halley_iterate(*F3, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
+      if (verbose) std::cout << " Boost halley_iterate " << std::endl;
     }
     else if (fdfsolver == 2)
     {
-//       found = boost::math::tools::bisect(*F, lower, upper, *tol, maxiter);
-//       if (verbose) std::cout << " Boost bisect " << std::endl;
-
+      x = boost::math::tools::schroeder_iterate(*F3, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
+      if (verbose) std::cout << " Boost schroeder_iterate " << std::endl;
     }
     (*tau) = (1 - x * x) / 2;
-    if (verbose) std::cout << " Root = " << (*tau) << " iterations " << maxiter << std::endl;
+    if (verbose) std::cout << " Root = " << (*tau) << " iterations " << it << std::endl;
     
     return (*tau);
   }

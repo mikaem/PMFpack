@@ -22,7 +22,13 @@ pmf.CSD(eta, csd)
 cf = zeros(N)
 pmf.counterflow(eta, cf)
 
-plot(eta, csd, 'b', eta, cf, 'r')
-show()
+#plot(eta, csd, 'b', eta, cf, 'r')
+#show()
 cv = zeros((3, N))
 pmf.CV(eta, cv)
+
+pmf.tau = 0.1
+
+pmf.set_fdfsolver(1)
+pmf.reallocate_solver(pmf.fdfroot, 1)
+pmf.compute(1, False)

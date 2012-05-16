@@ -29,7 +29,7 @@
 namespace pmfpack
 {
   gsl_root_fsolver * gsl_root_fsolver_realloc (gsl_root_fsolver * s, const gsl_root_fsolver_type * T);
-
+  
   class GSL_F_Root : public GSLRoot
   {
   public:
