@@ -24,8 +24,8 @@
 
 namespace pmfpack
 {
-  FDDerivator::FDDerivator(bool _central, Root *_froot, Root *_fdfroot)
-  : Derivator(_central, _froot, _fdfroot) {};
+  FDDerivator::FDDerivator(Roots *_roots)
+  : Derivator(_roots) {};
   
   double FDDerivator::compute(int verbose)
   {
@@ -37,11 +37,10 @@ namespace pmfpack
     im0 = (*im);
 
     // Set the s pointer to either sigma or im
-    s = params->central ? (*sigma) : (*im); 
-    
+    s = *roots->central ? (*sigma) : (*im); 
     // Get the largest possible dh. This is computed from 0<I<1, by taking all combinations of f+-dh,s+-dh.
     // This is valid also for d2tau/dfmean/dsigma
-    if (!params->central){
+    if (!(*roots->central)){
       dh = sqrt(s) - fmean0;
       dh = gsl_min(dh, 0.5 * (fmean0 - s));
       dh = gsl_min(dh, s - fmean0 * fmean0);
@@ -65,7 +64,7 @@ namespace pmfpack
     dh0 = dh;
     
     // Compute central tau first using a robust bracketing algorithm 
-    params->froot->compute(0);
+    roots->froot->compute(0);
     tau0 = (*tau);
     tau_m = 1.;
     count = 0;
@@ -74,11 +73,11 @@ namespace pmfpack
       // Find an appropriate dh
       if (tau_m > 0.005) dh = dh / 10;
       else dh = dh * 10;
-      tau_p = dfunction_df(+dh, params);
+      tau_p = dfunction_df(+dh, roots);
       tau_m = (fabs(tau_p - tau0) / tau0);
       count++;
     }
-    tau_m = dfunction_df(-dh, params);
+    tau_m = dfunction_df(-dh, roots);
     (*dtaudf) = (tau_p - tau_m) / 2. / dh;
     (*d2taudfdf) = (tau_p - 2. * tau0 + tau_m) / dh / dh;
     
@@ -87,11 +86,11 @@ namespace pmfpack
       // Find an appropriate dh
       if (tau_m > 0.005) dh = dh / 10;
       else dh = dh * 10;
-      tau_p = dfunction_ds(+dh, params);
+      tau_p = dfunction_ds(+dh, roots);
       tau_m = (fabs(tau_p - tau0) / tau0);
       count++;
     }
-    tau_m = dfunction_ds(-dh, params);
+    tau_m = dfunction_ds(-dh, roots);
     (*dtauds) = (tau_p - tau_m) / 2. / dh;
     (*d2taudsds) = (tau_p - 2. * tau0 + tau_m) / dh / dh;
     

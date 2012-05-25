@@ -43,7 +43,7 @@ int main()
     sigma = intensity_of_segregation * fmean * (1 - fmean);
     
     // Create a new PMF object 
-    PMF *pmf = new PMF(fmean, sigma);
+    PMF *pmf = new PMF(fmean, sigma, 1, 1, 0, 1);
     
     // Specify mean flow parameters from the simulation
     pmf->set_fmean_gradient(-0.3496497, 0, 0);
@@ -52,11 +52,20 @@ int main()
     pmf->DT = 1.;
 
     // Compute tau and derivatives of tau
-    pmf->froot->realloc(1);
-    pmf->froot->error_message_off();
-    pmf->verbose = 1;
+//      pmf->roots->froot->realloc(2);
+    pmf->roots->froot->error_message_off();
+    pmf->verbose = 0;
     pmf->compute(0, true);
+    std::cout << pmf->tau << " " << pmf->dtaudf << " " << pmf->dtauds << std::endl;
     
+    // Test lookuptable
+    GSLLookup *lookuptable = new GSLLookup(pmf->derivator);
+    lookuptable->generate_table(30, 30, "GSL_test_table.dat");
+    //lookuptable->read_table("GSL_test_table.dat");
+    std::cout << "Look up tau etc" << std::endl;
+    lookuptable->compute(0, true);  // Look up tau etc
+    std::cout << pmf->tau << " " << pmf->dtaudf << " " << pmf->dtauds << std::endl;
+        
     // Compute all possible conditional models
     int N = 10;
     double *eta = (double *) malloc(N * sizeof(double));

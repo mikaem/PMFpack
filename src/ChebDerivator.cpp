@@ -24,15 +24,15 @@
 
 namespace pmfpack
 {
-  ChebDerivator::ChebDerivator(bool _central, Root *_froot, Root *_fdfroot, int _cheb_order)
-  : Derivator(_central, _froot, _fdfroot) 
+  ChebDerivator::ChebDerivator(Roots *_roots, int _cheb_order)
+  : Derivator(_roots) 
   {
     cheb_order = _cheb_order;
     c  = gsl_cheb_alloc(cheb_order);
     c1 = gsl_cheb_alloc(cheb_order);
     c2 = gsl_cheb_alloc(cheb_order);
     F.function = &dfunction_df;
-    F.params = params;
+    F.params = roots;
   };
   
   ChebDerivator::~ChebDerivator()
@@ -58,7 +58,7 @@ namespace pmfpack
     dh = gsl_min(1e-3, dh * 0.2);
     
     // Compute central tau first using a robust bracketing algorithm
-    params->froot->compute(0);
+    roots->froot->compute(0);
     F.function = &dfunction_df;
     gsl_cheb_init(c, &F, -dh, dh);
     gsl_cheb_calc_deriv(c1, c);  // First derivative

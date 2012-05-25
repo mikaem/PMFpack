@@ -44,7 +44,7 @@ namespace pmfpack
   GSL_FDF_Root::GSL_FDF_Root()
   : GSLRoot()
   {
-      T = gsl_root_fdfsolver_secant;      
+      T = gsl_root_fdfsolver_newton;      
       s = gsl_root_fdfsolver_alloc(T);      
       F.f = &gslfunc;      
       F.df = &gsldfunc;            
@@ -55,7 +55,7 @@ namespace pmfpack
   GSL_FDF_Root::GSL_FDF_Root(Integrator *_integrator)
   : GSLRoot(_integrator)
   {
-      T = gsl_root_fdfsolver_secant;      
+      T = gsl_root_fdfsolver_newton;      
       s = gsl_root_fdfsolver_alloc(T);      
       F.f = &gslfunc;      
       F.df = &gsldfunc;            
@@ -70,8 +70,7 @@ namespace pmfpack
 
   double GSL_FDF_Root::compute(int verbose)
   {
-    int status,status2,status3;
-    int iter, max_iter;
+    int status, status2, status3, iter;
     double x, x0, xhi, Is;
     double tau0;
     
@@ -80,7 +79,7 @@ namespace pmfpack
     xhi = 1;
     tau0 = (*tau);
 
-// tau is kept in parameters[3]. We are solving for sr=sqrt(1-2*tau)
+// Remember we are solving for sr = sqrt(1-2*tau)
 // The initial guess is for tau. Hence this must first be converted to sr
     (*alfa) = erfinv(1 - (*fmean));
     (*tau)  = sqrt(1 - 2 * (*tau));
@@ -113,18 +112,19 @@ namespace pmfpack
         status = gsl_root_test_delta (1-x, 1-x0, 1e-15, 1e-14);
         status2 = gsl_root_test_residual((*f), 1e-15);
         status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
+      if (status == GSL_SUCCESS || status2 == GSL_SUCCESS || status3 == GSL_SUCCESS)
+        status = GSL_SUCCESS;
+      
       if (verbose == 1){
         std::cout << setprecision(6) << std::setw(4) << iter << std::setw(14) << 0.5*(1.-x*x) << std::setw(14) << x-x0 << std::setw(14) << (*f) << std::endl;
-      if (status == GSL_SUCCESS || status2 == GSL_SUCCESS || status3 == GSL_SUCCESS){
+      if (status == GSL_SUCCESS)
         std::cout << "Converged, root = " << 0.5 * (1. - x * x) << std::endl;
-        status = GSL_SUCCESS;
-        }
       }
     }
     while (status == GSL_CONTINUE && iter < max_iteration && x > 0. && x < xhi);
 
     if(status != GSL_SUCCESS){
-      printf(" Error, status = %d\n", status);
+      printf(" Error, status = %d %d %d\n", status, status2, status3);
       return -1;
     }
     (*tau) = (1 - x * x) / 2; // Transform back to tau

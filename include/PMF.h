@@ -39,9 +39,12 @@
 #include "Derivator.h"
 #include "FDDerivator.h"
 #include "ChebDerivator.h"
+#include "Lookup.h"
+#include "GSLLookup.h"
 
 namespace pmfpack
 {
+  
   class PMF
   {
   public:
@@ -63,9 +66,11 @@ namespace pmfpack
     
     Integrator *integrator;  // Class that performs the integral to determine tau (Eq. 17 of Mortensen and Andersson, FTC 2006)
     
-    Root *froot, *fdfroot;
+    Roots *roots;            // struct of *froot, *fdfroot and *central
     
     Derivator *derivator;
+    
+    Lookup *lookup;
     
     int verbose;
     
@@ -89,7 +94,7 @@ namespace pmfpack
 
     void set_integrator(int);
     
-    void compute(int, bool);
+    void compute(int, bool derivatives=false); 
     
     // Conditional models
     double PDF(double);    

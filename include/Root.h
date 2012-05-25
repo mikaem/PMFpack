@@ -43,7 +43,7 @@ namespace pmfpack
     
     Root(Integrator *);
     
-    ~Root() {};    
+    virtual ~Root() {};    
     
     virtual double compute(int) = 0;
     
@@ -62,6 +62,15 @@ namespace pmfpack
     Integrator *integrator;
       
   };
+  
+  // Create a struct that holds both an froot and an fdfroot class
+  typedef struct _Roots
+  {
+    Root *froot, *fdfroot;
+    bool *central;
+  } Roots;
+
+
 
 }
 

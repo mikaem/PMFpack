@@ -32,7 +32,7 @@ namespace pmfpack
   {
   public:
     
-    ChebDerivator(bool, Root *, Root *, int);
+    ChebDerivator(Roots *, int);
             
     ~ChebDerivator();
       

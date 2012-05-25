@@ -33,7 +33,7 @@ namespace pmfpack
   public:
     Integrator(double **);
             
-    ~Integrator() {};        
+    virtual ~Integrator() {};        
     
     double **parameters;
     

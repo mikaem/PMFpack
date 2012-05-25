@@ -44,3 +44,6 @@ using namespace pmfpack;
 %apply (double* INPLACE_ARRAY1, int DIM1) {(double*, int ), (double*, int)};
 %apply (double* INPLACE_ARRAY2, int DIM1, int DIM2) {(double*, int, int)};
 %include PMF.h
+%include Lookup.h
+%include GSLLookup.h
+

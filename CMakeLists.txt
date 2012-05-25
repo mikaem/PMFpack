@@ -20,7 +20,10 @@ include_directories(${PMF_INCLUDE_DIR})
 #------------------------------------------------------------------------------
 # Find sources
 file(GLOB CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
 list(APPEND SOURCES ${CPP_SOURCES})
+#list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GSLLookup.cpp" )
+#list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Lookup.cpp" )
 file(GLOB C_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 list(APPEND SOURCES ${C_SOURCES})
 

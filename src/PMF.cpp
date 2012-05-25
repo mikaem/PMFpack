@@ -37,11 +37,14 @@ namespace pmfpack
   
   PMF::PMF(double _fmean, double _sigma, int fsolver, int fdfsolver, int integral, int deriv)
   {
-    froot = NULL;    
-    fdfroot = NULL;    
+    central = false; // Are you using central moments (or integer) in your CFD calculations?
+    roots = new Roots();
+    roots->froot = NULL;    
+    roots->fdfroot = NULL;    
+    roots->central = &central; 
     integrator = NULL;    
     derivator = NULL;
-    central = false;      // Are you using central moments (or integer) in your CFD calculations?
+    lookup = NULL;
     verbose = 0;    
     chi = 1.;    
     DT = 1.;
@@ -68,23 +71,27 @@ namespace pmfpack
   
   PMF::~PMF()
   {
-    delete froot;
-    delete fdfroot;
+    delete roots->froot;
+    delete roots->fdfroot;
+    delete roots;
     delete integrator;
+    delete derivator;
+    delete lookup;
   }
   
   void PMF::set_fsolver(int fsolver)
   {
-    if (froot != NULL) delete froot;    
+    if (roots->froot != NULL) delete roots->froot;    
     
     if (fsolver == 0)
     {
-      froot = new GSL_F_Root(integrator);
+      std::cout << "GSL fsolver" << std::endl; 
+      roots->froot = new GSL_F_Root(integrator);
     }
     else if (fsolver == 1)
     {
-      std::cout << "Boost fsolver " << std::endl; 
-      froot = new Boost_F_Root(integrator);
+      std::cout << "Boost fsolver" << std::endl; 
+      roots->froot = new Boost_F_Root(integrator);
     }
     else
     {
@@ -94,16 +101,17 @@ namespace pmfpack
   
   void PMF::set_fdfsolver(int fdfsolver)
   {
-    if (fdfroot != NULL) delete fdfroot;    
+    if (roots->fdfroot != NULL) delete roots->fdfroot;    
     
     if (fdfsolver == 0)
     {
-      fdfroot = new GSL_FDF_Root(integrator);
+      std::cout << "GSL fdfsolver" << std::endl;
+      roots->fdfroot = new GSL_FDF_Root(integrator);
     }
     else if (fdfsolver == 1)
     {
-      std::cout << "Boost fdfsolver " << std::endl; 
-      fdfroot = new Boost_FDF_Root(integrator);
+      std::cout << "Boost fdfsolver" << std::endl; 
+      roots->fdfroot = new Boost_FDF_Root(integrator);
     }
     else
     {
@@ -117,17 +125,13 @@ namespace pmfpack
     
     if (integral == 0)
     {
+      std::cout << "GSL integrator" << std::endl; 
       integrator = new GSLIntegrator(parameters);
     }
     else
     {
       std::cout << " Not implemented integrator \n" << std::endl;
     }
-//       else if (backend_integral == 1)
-//       {
-//         integrator = new LGIntegrator(parameters);
-//       }
-
   }
   
   void PMF::set_derivator(int deriv)
@@ -136,18 +140,20 @@ namespace pmfpack
     
     if (deriv == 0)
     {
-      derivator = new FDDerivator(central, froot, fdfroot);
+      std::cout << "Finite difference derivator" << std::endl; 
+      derivator = new FDDerivator(roots);
     }
     else if (deriv == 1)
     {
-      derivator = new ChebDerivator(central, froot, fdfroot, cheb_order);
+      std::cout << "Chebyshev derivator" << std::endl; 
+      derivator = new ChebDerivator(roots, cheb_order);
     }
     else
     {
       std::cout << " Not implemented derivator \n" << std::endl;
     }
   }
-
+  
   void PMF::set_parameters(double f, double s)
   {
     fmean = f;
@@ -159,7 +165,7 @@ namespace pmfpack
     {
       std::cout << "Wrong input. 0 < fmean < 1." << std::endl;
     }
-    else if(s / f / (1 - f) <= 0. || s / f / (1 - f) >= 1.){
+    else if(s <= 0. || s / f / (1 - f) >= 1.){
       std::cout << "Wrong input. 0 < Intensity of segregation < 1." << std::endl;
     }
   }
@@ -182,17 +188,17 @@ namespace pmfpack
   {
     if (!derivatives){ // Compute just tau
       if (solver == 0)
-        froot->compute(verbose);     // Bracketing solver
+        roots->froot->compute(verbose);     // Bracketing solver
       else if (solver == 1)
-        fdfroot->compute(verbose);   // Root polishing solver
+        roots->fdfroot->compute(verbose);   // Root polishing solver
       else
         std::cout << " Not implemented PMF::compute " << std::endl;
     }
-    else{ // Compute tau, dtauds, dtaudf, d2taudfdf and d2taudsds
+    else{ // Compute tau, dtaudf, dtauds, d2taudfdf and d2taudsds
       derivator->compute(verbose);      
     }
   }
-
+  
   double PMF::PDF(double eta)
   {
     double SQRT2tau, phi, EXV;

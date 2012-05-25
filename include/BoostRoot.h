@@ -37,7 +37,7 @@ namespace pmfpack
     
     BoostRoot(Integrator *);
     
-    ~BoostRoot() {};
+    virtual ~BoostRoot() {};
             
     virtual double compute(int) = 0;
     

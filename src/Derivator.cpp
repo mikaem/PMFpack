@@ -34,21 +34,19 @@
 
 namespace pmfpack
 {
-  Derivator::Derivator(bool _central, Root *_froot, Root *_fdfroot)
+  Derivator::Derivator(Roots *_roots)
+  : roots(_roots)
   {
-    params = new Params();
-    params->central = _central;
-    params->froot = _froot;
-    params->fdfroot = _fdfroot;
-    fmean = _froot->parameters[0];
-    sigma = _froot->parameters[1];
-    alfa  = _froot->parameters[2];
-    tau   = _froot->parameters[3];
-    im    = _froot->parameters[4];
-    dtaudf = _froot->parameters[7];
-    dtauds = _froot->parameters[8];
-    d2taudfdf = _froot->parameters[9];
-    d2taudsds = _froot->parameters[10];
+    fmean = roots->froot->parameters[0];
+    sigma = roots->froot->parameters[1];
+    alfa  = roots->froot->parameters[2];
+    tau   = roots->froot->parameters[3];
+    im    = roots->froot->parameters[4];
+    dtaudf = roots->froot->parameters[7];
+    dtauds = roots->froot->parameters[8];
+    d2taudfdf = roots->froot->parameters[9];
+    d2taudsds = roots->froot->parameters[10];
+    
   }
   
   double dfunction_df(const double df, void *pars)
@@ -57,8 +55,8 @@ namespace pmfpack
      * Add a tiny df to fmean, modify im, compute tau and then reset fmean + im.
      */
     double fmean0, im0, alfa0, tau0, newtau;
-    Params *params = (Params *) pars;
-    double **p = params->fdfroot->parameters;
+    Roots *roots = (Roots *) pars;
+    double **p = roots->fdfroot->parameters;
     
     // Remember old values
     fmean0 = (*p[0]);
@@ -68,10 +66,10 @@ namespace pmfpack
         
     // Modify parameters
     (*p[0]) = (*p[0]) + df;
-    (*p[4]) = params->central ? (*p[0]) * (*p[0]) + (*p[1]) : (*p[4]);
+    (*p[4]) = *roots->central ? (*p[0]) * (*p[0]) + (*p[1]) : (*p[4]);
     
     // Compute new tau
-    params->fdfroot->compute(0);
+    roots->fdfroot->compute(0);
     
     // Reset to old values
     (*p[0]) = fmean0;
@@ -89,8 +87,8 @@ namespace pmfpack
      * Add a tiny ds to variance, modify im, compute tau and then reset im.
      */
     double im0, tau0, newtau;
-    Params *params = (Params *) pars;
-    double **p = params->fdfroot->parameters;
+    Roots *roots = (Roots *) pars;
+    double **p = roots->fdfroot->parameters;
     
     // Remember old values
     tau0 = (*p[3]);
@@ -100,7 +98,7 @@ namespace pmfpack
     (*p[4]) = (*p[4]) + ds;
 
     // Compute new tau
-    params->fdfroot->compute(0);
+    roots->fdfroot->compute(0);
     
     // Reset to old values
     (*p[4]) = im0;

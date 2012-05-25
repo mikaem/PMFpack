@@ -26,28 +26,23 @@
 
 namespace pmfpack
 {
-  struct Params
-  {
-    Root *froot, *fdfroot;
-    bool central;
-  };
   
   double dfunction_df(const double, void *);
   double dfunction_ds(const double, void *);
-
+  
   class Derivator
   {
   public:
-    Derivator(bool, Root *, Root *);
+    Derivator(Roots *);
             
-    ~Derivator() {};        
+    virtual ~Derivator() {};        
     
     virtual double compute(int) = 0;
     
     double *fmean, *sigma, *alfa, *tau, *im;
     double *dtaudf, *dtauds, *d2taudfdf, *d2taudsds;
     
-    Params *params;
+    Roots *roots;
         
   };
 }

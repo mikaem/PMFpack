@@ -31,7 +31,7 @@ namespace pmfpack
   {
   public:
     
-    FDDerivator(bool, Root *, Root *);
+    FDDerivator(Roots *);
             
     ~FDDerivator() {};        
       

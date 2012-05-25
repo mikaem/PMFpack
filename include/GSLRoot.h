@@ -40,7 +40,7 @@ namespace pmfpack
     
     GSLRoot(Integrator *);
     
-    ~GSLRoot() {};
+    virtual ~GSLRoot() {};
             
     virtual double compute(int) = 0;
     

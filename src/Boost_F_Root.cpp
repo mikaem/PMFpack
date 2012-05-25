@@ -51,21 +51,25 @@ namespace pmfpack{
   double Boost_F_Root::compute(int verbose)
   {
     static double x;
+    boost::uintmax_t it;
 
     (*alfa) = erfinv(1 - (*fmean));    
+    it = maxiter;
     if (fsolver == 0)
     {
-      found = boost::math::tools::toms748_solve(*F, lower, upper, *tol, maxiter);
+      found = boost::math::tools::toms748_solve(*F, lower, upper, *tol, it);
       if (verbose) std::cout << " Boost toms748 " << std::endl;
+      if (it == maxiter) std::cout << " Root not found Boost toms748 Fsolver" << std::endl;
     }
     else if (fsolver == 1)
     {
-      found = boost::math::tools::bracket_and_solve_root(*F, sqrt(1 - 2 * (*tau)), 1.1, false, *tol, maxiter);
+      found = boost::math::tools::bracket_and_solve_root(*F, sqrt(1 - 2 * (*tau)), 1.1, false, *tol, it);
       if (verbose) std::cout << " Boost bracket_and_solve_root " << std::endl;
+      if (it == maxiter) std::cout << " Root not found Boost bracket_and_solve Fsolver" << std::endl;      
     }
     else if (fsolver == 2)
     {
-      found = boost::math::tools::bisect(*F, lower, upper, *tol, maxiter);
+      found = boost::math::tools::bisect(*F, lower, upper, *tol, it);
       if (verbose) std::cout << " Boost bisect " << std::endl;
 
     }
