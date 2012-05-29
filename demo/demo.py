@@ -23,7 +23,7 @@ print "Computed tau  ", pmf.tau, " time ", time()-t0
 
 # Test lookuptable
 lookuptable = GSLLookup(pmf.derivator)
-lookuptable.generate_table(30, 30, 'GSL_table.dat')
+lookuptable.generate_table(10, 10, 'GSL_table.dat')
 
 # When generated it can be read in here instead:
 #lookuptable.read_table('GSL_table.dat')

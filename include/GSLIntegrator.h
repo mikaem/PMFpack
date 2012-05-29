@@ -24,7 +24,6 @@
 
 #include "Integrator.h"
 #include <gsl/gsl_integration.h>
-#include "gsl/gsl_cdf.h"
 
 namespace pmfpack
 {

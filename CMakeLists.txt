@@ -9,27 +9,37 @@ SET(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "PMF install pre
 )
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+# Enable Boost?
+set(PMF_ENABLE_BOOST ${PMF_ENABLE_BOOST} CACHE BOOL "FALSE")
+
 #------------------------------------------------------------------------------
 # Install header files
-
 file(GLOB _HEADERS ${PMF_INCLUDE_DIR}/*.h)
 list(APPEND HEADERS ${_HEADERS})
-install(FILES ${_HEADERS} DESTINATION include COMPONENT Development)
+if (NOT PMF_ENABLE_BOOST)
+  file(GLOB Boost_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/Boost*.h)
+  list(REMOVE_ITEM HEADERS ${Boost_HEADERS})  
+endif()
+install(FILES ${HEADERS} DESTINATION include COMPONENT Development)
 include_directories(${PMF_INCLUDE_DIR})
 
 #------------------------------------------------------------------------------
 # Find sources
 file(GLOB CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-
 list(APPEND SOURCES ${CPP_SOURCES})
-#list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GSLLookup.cpp" )
-#list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Lookup.cpp" )
 file(GLOB C_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 list(APPEND SOURCES ${C_SOURCES})
+if (NOT PMF_ENABLE_BOOST)
+  file(GLOB Boost_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/Boost*.cpp)
+  list(REMOVE_ITEM SOURCES ${Boost_SOURCES})  
+endif()
 
 list(APPEND PMF_CXX_DEFINITIONS "-fPIC")
-if (CMAKE_BUILD_TYPE STREQUAL "Developer" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND PMF_CXX_DEFINITIONS "-DBOOST_MATH_INSTRUMENT")
+if (PMF_ENABLE_BOOST)
+  list(APPEND PMF_CXX_DEFINITIONS "-DHAS_BOOST")
+  if (CMAKE_BUILD_TYPE STREQUAL "Developer" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+    list(APPEND PMF_CXX_DEFINITIONS "-DBOOST_MATH_INSTRUMENT")
+  endif()
 endif()
 
 # Dependency

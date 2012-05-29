@@ -42,12 +42,11 @@ namespace pmfpack
     Is = (double *) malloc(Ns * sizeof(double));
     atangrid(1.0, 1.0);
     tau_table = f3tensor(5, Nf, Ns);
-    ys = (double **) malloc(8 * sizeof(double*));
   } 
   
   GSLLookup::~GSLLookup()
   {
-      lookup_clean();
+    lookup_clean();
   }
   
   void GSLLookup::lookup_clean()
@@ -55,7 +54,6 @@ namespace pmfpack
     free(fm);
     free(Is);
     free_f3tensor(tau_table);
-    free(ys);
     gsl_interp_free(s);
   }
   
@@ -207,6 +205,7 @@ namespace pmfpack
     x1s = &fm[m-ms1];
     x2s = &Is[n-ns1];
     
+    // Copy submatrix to ys and interpolate
     for(int i = m-ms1; i < m+ms2; i++){
       ys[i-m+ms1] = tau_table[0][i]+n-ns1;
     }

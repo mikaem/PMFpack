@@ -18,17 +18,60 @@
 //
 // First added:  2012-05-04
 // Last changed: 2012-05-04
-
+#ifdef HAS_BOOST
+#include <boost/math/special_functions/erf.hpp>
+#endif
 #include "PMF.h"
 #include "gsl/gsl_cblas.h"
+#include "gsl/gsl_cdf.h"
 
+// The implemented error function and its inverse are defined using 
+// the normal distribution and not the error function as defined in
+// e.g. http://mathworld.wolfram.com/Erf.html. The correlation between 
+// the regular error function and the implemented based on the normal 
+// distribution is as folows
+//
+//  erf(z) = 0.5 * (1 + erf_(z/sqrt(2)))
+//
+//  erfinv(z) = sqrt(2) * erfinv_(2 * z - 1)
+// 
+//  where
+//                              / x
+//                     2       |       -t*t
+//       erf_(x) = ----------- |      e       dt
+//                 sqrt(pi)    |
+//                             /0
+//
+//                              / x
+//                     1       |       -t*t/2
+//        erf(x) = ----------- |      e       dt
+//                  sqrt(2 pi) |
+//                             /-oo
+// 
+// and erfinv and erfinv_ are the inverses of erf and erf_ respectively
+
+#ifdef HAS_BOOST
+// Boost use the erf_ definition and as such we need to wrap these up
+double boost_erf(double z)
+{
+  return 0.5 * (1 + boost::math::erf(z / M_SQRT2));
+}
+
+double boost_erfinv(double z)
+{
+  return M_SQRT2 * boost::math::erf_inv(2 * z - 1);
+}
+#endif
 namespace pmfpack
 {  
+  // Choose factory for error functions. I usually find GSL to be fastest (M. M.)
   simple_function erfinv = &gsl_cdf_ugaussian_Pinv;
+//  simple_function erfinv = &boost_erfinv;
 //   simple_function erfinv = &normsinv;
 //   simple_function erfinv = &Erfinv;
 //   simple_function erf = &Erf;  
   simple_function erf = &gsl_cdf_ugaussian_P;
+//  simple_function erf = &boost_erf;
   
   void PMF::reallocate_solver(Root *root, int solver)
   {
@@ -44,7 +87,6 @@ namespace pmfpack
     roots->central = &central; 
     integrator = NULL;    
     derivator = NULL;
-    lookup = NULL;
     verbose = 0;    
     chi = 1.;    
     DT = 1.;
@@ -76,7 +118,6 @@ namespace pmfpack
     delete roots;
     delete integrator;
     delete derivator;
-    delete lookup;
   }
   
   void PMF::set_fsolver(int fsolver)
@@ -88,11 +129,13 @@ namespace pmfpack
       std::cout << "GSL fsolver" << std::endl; 
       roots->froot = new GSL_F_Root(integrator);
     }
+#ifdef HAS_BOOST    
     else if (fsolver == 1)
     {
       std::cout << "Boost fsolver" << std::endl; 
       roots->froot = new Boost_F_Root(integrator);
     }
+#endif
     else
     {
       std::cout << " Not implemented fsolver \n" << std::endl;
@@ -108,11 +151,13 @@ namespace pmfpack
       std::cout << "GSL fdfsolver" << std::endl;
       roots->fdfroot = new GSL_FDF_Root(integrator);
     }
+#ifdef HAS_BOOST
     else if (fdfsolver == 1)
     {
       std::cout << "Boost fdfsolver" << std::endl; 
       roots->fdfroot = new Boost_FDF_Root(integrator);
     }
+#endif
     else
     {
       std::cout << " Not implemented fdfsolver \n" << std::endl;
@@ -291,7 +336,7 @@ namespace pmfpack
     CC = M_SQRT2 / M_SQRTPI * (alfaf + phi * dtaudf / tau / tm2) * wa * R4;
     csd = CF * (chi - DT * (fx2 * (cen + dtaudf * dtaudf * d2taudsds / dtauds / dtauds / dtauds - d2taudfdf / dtauds) - 2. * fxsx * alfaf * AA
         -(sx2 * dtauds + 2. * fxsx * dtaudf + fx2 * dtaudf * dtaudf / dtauds) * BB))
-        -DT * fx2 * CC; // N is defined with the factor 2!!!!!!
+        -DT * fx2 * CC; // chi is defined with the factor 2!!!!!!
         
     return csd;
   }
@@ -344,7 +389,7 @@ namespace pmfpack
         CC = M_SQRT2 / M_SQRTPI * (alfaf + phii * dtaudf / tau / tm2) * wa[i] * R4;
         csd[i] = CF * (chi - DT * (fx2 * (cen + dtaudf * dtaudf * d2taudsds / dtauds / dtauds / dtauds - d2taudfdf / dtauds) - 2. * fxsx * alfaf * AA
             -(sx2 * dtauds + 2. * fxsx * dtaudf + fx2 * dtaudf * dtaudf / dtauds) * BB))
-            -DT * fx2 * CC; // N is defined with the factor 2!!!!!!
+            -DT * fx2 * CC; // chi is defined with the factor 2!!!!!!
     }
     free(EXV);
     free(EXV2);

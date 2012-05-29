@@ -61,13 +61,13 @@ namespace pmfpack
     // Pointers to the data in lookuptables. 
     double ***tau_table;
     
-    double **ys;               // Used by interpolation routine
+    double *ys[16];  // Submatrix used by interpolation routine
     
     const gsl_interp_type *t;
     
     gsl_interp *s;
     
-    int order;
+    int order;  // order of interpolation
 
   };
 

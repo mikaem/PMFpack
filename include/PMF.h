@@ -70,8 +70,6 @@ namespace pmfpack
     
     Derivator *derivator;
     
-    Lookup *lookup;
-    
     int verbose;
     
     bool central;
