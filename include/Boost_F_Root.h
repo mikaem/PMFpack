@@ -54,7 +54,6 @@ namespace pmfpack
   class Boost_F_Root : public BoostRoot
   {
   public:
-    Boost_F_Root();
     
     Boost_F_Root(Integrator *);
     

@@ -38,16 +38,16 @@ namespace pmfpack
     
     ~GSLLookup();    
                 
-    void compute(int, bool derivatives=false);
+    void compute(int, bool derivatives=false, bool polish=false);
     
-    void operator()(int tau, bool derivatives=false) 
+    void operator()(int tau, bool derivatives=false, bool polish=false) 
     {
-      compute(tau, derivatives);
+      compute(tau, derivatives, polish);
     }
     
     void init(int, int);
     
-    void read_table(char*);
+    int read_table(char*);
     
     void generate_table(int, int, char*);
     

@@ -17,20 +17,32 @@ pmf.tau = 0.1
 
 #pmf.set_fdfsolver(1)
 pmf.verbose = 0
-t0 = time()
-pmf.compute(0, True)
-print "Computed tau  ", pmf.tau, " time ", time()-t0
 
 # Test lookuptable
 lookuptable = GSLLookup(pmf.derivator)
-lookuptable.generate_table(10, 10, 'GSL_table.dat')
+t0 = time()
+lookuptable.generate_table(10, 10, 'GSL_table.dat') # Create a small table for testing
+print "Generated Lookup table ", time() - t0
+
+t0 = time()
+for i in range(100): 
+    pmf.tau = 0.1
+    pmf.compute(0, True)
+print "\nComputed tau  ", pmf.tau, " time ", (time() - t0) / 100
 
 # When generated it can be read in here instead:
 #lookuptable.read_table('GSL_table.dat')
 t0 = time()
-lookuptable(0, True)
-print "Looked up tau ", pmf.tau, " time ", time()-t0
+for i in range(100):
+    lookuptable(0, True)
+print "\nLookup without root-polishing:"
+print "Looked up tau ", pmf.tau, " time ", (time() - t0) / 100
 
+t0 = time()
+for i in range(100):
+    lookuptable(0, True, True)
+print "\nLookup with root-polishing:"
+print "Looked up tau ", pmf.tau, " time ", (time() - t0) / 100
 # Test some conditional models
 N = 1000
 eta = linspace(0.001, 0.999, N)

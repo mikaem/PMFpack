@@ -31,14 +31,11 @@ namespace pmfpack
     im   = parameters[4];
   }
   
-  double function(const double phi, void *params)
+  double function(const double phi, double **data)
   {
-    double y, X, z;
-    double **data = (double **) params;
-    
-    z = ((*data[3]) * phi - (*data[2])) / sqrt(1 - (*data[3]) * (*data[3]));
-    X = erf(z);
-    y = exp(-phi * phi / 2);
-    return y * X * X / (*data[4]);
+    double alfa = (*data[2]);
+    double tau = (*data[3]); 
+    double X = erf((tau * phi - alfa) / sqrt(1 - tau * tau));
+    return X * X * exp(- phi * phi / 2);
   }    
 }

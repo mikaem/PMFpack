@@ -48,7 +48,6 @@ namespace pmfpack
   class PMF
   {
   public:
-    PMF() {};
     
     PMF(double fmean, double sigma, int fsolver=0, int fdfsolver=0, int integral=0, int derivator=0);
     

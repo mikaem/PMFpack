@@ -46,4 +46,5 @@ using namespace pmfpack;
 %include PMF.h
 %include Lookup.h
 %include GSLLookup.h
+%include PMFMath.h
 

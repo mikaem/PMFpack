@@ -23,8 +23,6 @@
 #define __GSL_FDF_ROOT_H
 
 #include "GSLRoot.h"
-#include "gsl/gsl_cdf.h"
-#include <gsl/gsl_roots.h>
 
 namespace pmfpack
 {
@@ -33,8 +31,6 @@ namespace pmfpack
   class GSL_FDF_Root : public GSLRoot
   {
   public:
-    GSL_FDF_Root();
-    
     GSL_FDF_Root(Integrator *);
     
     ~GSL_FDF_Root();
@@ -42,8 +38,6 @@ namespace pmfpack
     gsl_function_fdf F;
     
     double compute(int);
-    
-    void initial_guess(double x0) {(*tau) = x0;};
     
     void realloc(const unsigned int);
     

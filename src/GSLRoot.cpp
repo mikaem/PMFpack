@@ -50,13 +50,6 @@ namespace pmfpack{
     fdfunc(x, integrator, f, df);    
   }
 
-
-  GSLRoot::GSLRoot()
-  : Root()
-  {
-    gsl_set_error_handler(&my_error_handler);
-  }
-
   GSLRoot::GSLRoot(Integrator *_integrator)
   : Root(_integrator)
   {        

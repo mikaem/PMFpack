@@ -21,8 +21,6 @@
 
 #include "BoostRoot.h"
 
-using namespace std;
-
 namespace pmfpack{
     
   BoostRoot::BoostRoot(Integrator *_integrator)

@@ -34,10 +34,11 @@ if (NOT PMF_ENABLE_BOOST)
   list(REMOVE_ITEM SOURCES ${Boost_SOURCES})  
 endif()
 
-list(APPEND PMF_CXX_DEFINITIONS "-fPIC")
+list(APPEND PMF_CXX_DEFINITIONS "-fPIC -O3")
 if (PMF_ENABLE_BOOST)
   list(APPEND PMF_CXX_DEFINITIONS "-DHAS_BOOST")
   if (CMAKE_BUILD_TYPE STREQUAL "Developer" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # Makes it print out a lot of debug info on Boost:
     list(APPEND PMF_CXX_DEFINITIONS "-DBOOST_MATH_INSTRUMENT")
   endif()
 endif()

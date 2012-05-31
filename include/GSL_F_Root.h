@@ -23,8 +23,6 @@
 #define __GSL_F_ROOT_H
 
 #include "GSLRoot.h"
-#include <gsl/gsl_roots.h>
-#include <gsl/gsl_errno.h>
 
 namespace pmfpack
 {
@@ -33,7 +31,6 @@ namespace pmfpack
   class GSL_F_Root : public GSLRoot
   {
   public:
-    GSL_F_Root();
     
     GSL_F_Root(Integrator *);
     

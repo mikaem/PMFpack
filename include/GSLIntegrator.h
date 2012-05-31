@@ -27,6 +27,7 @@
 
 namespace pmfpack
 {
+  double gslfunction(const double x, void *params);
 
   class GSLIntegrator : public Integrator 
   {
@@ -39,6 +40,8 @@ namespace pmfpack
     gsl_function F;
         
     gsl_integration_workspace *w;
+    
+    gsl_integration_glfixed_table *table;
     
     virtual double compute();
                       

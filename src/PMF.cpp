@@ -18,60 +18,14 @@
 //
 // First added:  2012-05-04
 // Last changed: 2012-05-04
-#ifdef HAS_BOOST
-#include <boost/math/special_functions/erf.hpp>
-#endif
+
 #include "PMF.h"
 #include "gsl/gsl_cblas.h"
-#include "gsl/gsl_cdf.h"
 
-// The implemented error function and its inverse are defined using 
-// the normal distribution and not the error function as defined in
-// e.g. http://mathworld.wolfram.com/Erf.html. The correlation between 
-// the regular error function and the implemented based on the normal 
-// distribution is as folows
-//
-//  erf(z) = 0.5 * (1 + erf_(z/sqrt(2)))
-//
-//  erfinv(z) = sqrt(2) * erfinv_(2 * z - 1)
-// 
-//  where
-//                              / x
-//                     2       |       -t*t
-//       erf_(x) = ----------- |      e       dt
-//                 sqrt(pi)    |
-//                             /0
-//
-//                              / x
-//                     1       |       -t*t/2
-//        erf(x) = ----------- |      e       dt
-//                  sqrt(2 pi) |
-//                             /-oo
-// 
-// and erfinv and erfinv_ are the inverses of erf and erf_ respectively
+using namespace std;
 
-#ifdef HAS_BOOST
-// Boost use the erf_ definition and as such we need to wrap these up
-double boost_erf(double z)
-{
-  return 0.5 * (1 + boost::math::erf(z / M_SQRT2));
-}
-
-double boost_erfinv(double z)
-{
-  return M_SQRT2 * boost::math::erf_inv(2 * z - 1);
-}
-#endif
 namespace pmfpack
 {  
-  // Choose factory for error functions. I usually find GSL to be fastest (M. M.)
-  simple_function erfinv = &gsl_cdf_ugaussian_Pinv;
-//  simple_function erfinv = &boost_erfinv;
-//   simple_function erfinv = &normsinv;
-//   simple_function erfinv = &Erfinv;
-//   simple_function erf = &Erf;  
-  simple_function erf = &gsl_cdf_ugaussian_P;
-//  simple_function erf = &boost_erf;
   
   void PMF::reallocate_solver(Root *root, int solver)
   {
@@ -104,7 +58,7 @@ namespace pmfpack
     parameters[9] = &d2taudfdf;
     parameters[10] = &d2taudsds;
     
-    // Hook up the appropriate classe to do calculations
+    // Hook up the appropriate classes to do actual calculations
     set_integrator(integral);         
     set_fsolver(fsolver);     
     set_fdfsolver(fdfsolver);    
@@ -126,19 +80,19 @@ namespace pmfpack
     
     if (fsolver == 0)
     {
-      std::cout << "GSL fsolver" << std::endl; 
+      cout << "GSL fsolver" << endl; 
       roots->froot = new GSL_F_Root(integrator);
     }
 #ifdef HAS_BOOST    
     else if (fsolver == 1)
     {
-      std::cout << "Boost fsolver" << std::endl; 
+      cout << "Boost fsolver" << endl; 
       roots->froot = new Boost_F_Root(integrator);
     }
 #endif
     else
     {
-      std::cout << " Not implemented fsolver \n" << std::endl;
+      cout << " Not implemented fsolver \n" << endl;
     }
   }
   
@@ -148,19 +102,19 @@ namespace pmfpack
     
     if (fdfsolver == 0)
     {
-      std::cout << "GSL fdfsolver" << std::endl;
+      cout << "GSL fdfsolver" << endl;
       roots->fdfroot = new GSL_FDF_Root(integrator);
     }
 #ifdef HAS_BOOST
     else if (fdfsolver == 1)
     {
-      std::cout << "Boost fdfsolver" << std::endl; 
+      cout << "Boost fdfsolver" << endl; 
       roots->fdfroot = new Boost_FDF_Root(integrator);
     }
 #endif
     else
     {
-      std::cout << " Not implemented fdfsolver \n" << std::endl;
+      cout << " Not implemented fdfsolver \n" << endl;
     }
   }
   
@@ -170,12 +124,12 @@ namespace pmfpack
     
     if (integral == 0)
     {
-      std::cout << "GSL integrator" << std::endl; 
+      cout << "GSL integrator" << endl; 
       integrator = new GSLIntegrator(parameters);
     }
     else
     {
-      std::cout << " Not implemented integrator \n" << std::endl;
+      cout << " Not implemented integrator \n" << endl;
     }
   }
   
@@ -185,17 +139,17 @@ namespace pmfpack
     
     if (deriv == 0)
     {
-      std::cout << "Finite difference derivator" << std::endl; 
+      cout << "Finite difference derivator" << endl; 
       derivator = new FDDerivator(roots);
     }
     else if (deriv == 1)
     {
-      std::cout << "Chebyshev derivator" << std::endl; 
+      cout << "Chebyshev derivator" << endl; 
       derivator = new ChebDerivator(roots, cheb_order);
     }
     else
     {
-      std::cout << " Not implemented derivator \n" << std::endl;
+      cout << " Not implemented derivator \n" << endl;
     }
   }
   
@@ -208,10 +162,11 @@ namespace pmfpack
     im = s + f * f;
     if(f <= 0. || f >= 1.)
     {
-      std::cout << "Wrong input. 0 < fmean < 1." << std::endl;
+      cout << "Wrong input. 0 < fmean < 1" << endl;
     }
-    else if(s <= 0. || s / f / (1 - f) >= 1.){
-      std::cout << "Wrong input. 0 < Intensity of segregation < 1." << std::endl;
+    else if(s <= 0. || s / f / (1 - f) >= 1.)
+    {
+      cout << "Wrong input. 0 < Intensity of segregation < 1" << endl;
     }
   }
   
@@ -237,7 +192,7 @@ namespace pmfpack
       else if (solver == 1)
         roots->fdfroot->compute(verbose);   // Root polishing solver
       else
-        std::cout << " Not implemented PMF::compute " << std::endl;
+        cout << " Not implemented PMF::compute " << endl;
     }
     else{ // Compute tau, dtaudf, dtauds, d2taudfdf and d2taudsds
       derivator->compute(verbose);      

@@ -21,8 +21,6 @@
 
 #include "GSLLookup.h"
 
-using namespace std;
-
 namespace pmfpack
 {
   
@@ -57,29 +55,33 @@ namespace pmfpack
     gsl_interp_free(s);
   }
   
-  void GSLLookup::read_table(char* filename)
+  int GSLLookup::read_table(char* filename)
   {
     FILE *stream;
+    int status;
         
     stream = fopen(filename, "r");
-    fscanf(stream, "%d", &Nf);
-    fscanf(stream, "%d", &Ns);
+    if ((stream = fopen(filename, "r")) == NULL)
+        return -1;
+    status = fscanf(stream, "%d", &Nf);
+    status = fscanf(stream, "%d", &Ns);
 
     if (!fm) init(Nf, Ns);
     for (int i = 0; i < Nf; i++)
-      fscanf(stream, "%lf", &fm[i]);
+      status = fscanf(stream, "%lf", &fm[i]);
     for (int i = 0; i < Ns; i++)
-      fscanf(stream, "%lf", &Is[i]);
-    fscanf(stream, "%d", &grid_type);
+      status = fscanf(stream, "%lf", &Is[i]);
+    status = fscanf(stream, "%d", &grid_type);
         
     for (int k = 0; k < 5; k++){   
       for (int i = 0; i < Nf; i++){
         for (int j = 0; j < Ns; j++){  
-          fscanf(stream, "%lf", &tau_table[k][i][j]);
+          status = fscanf(stream, "%lf", &tau_table[k][i][j]);
         }
       }
     }    
     fclose(stream);
+    return 1;
   }
   
   void GSLLookup::set_order(int _order)
@@ -156,7 +158,7 @@ namespace pmfpack
     free(ymtmp);
   }
   
-  void GSLLookup::compute(int verbose, bool derivatives)
+  void GSLLookup::compute(int verbose, bool derivatives, bool polish)
   {
     uint m, n, ms1, ms2, ns1, ns2, ms, ns, check;
     double *x1s, *x2s, dy;
@@ -210,7 +212,14 @@ namespace pmfpack
       ys[i-m+ms1] = tau_table[0][i]+n-ns1;
     }
     gslpolin2(x1s, x2s, ys, tau);
-    
+    // Polish the root with an fdf solver for best possible accuracy. The lookup is then initial guess.
+    if (polish){
+      if (derivatives)
+        derivator->compute(verbose);
+      else
+        derivator->roots->fdfroot->compute(verbose);
+      return; // Return because you don't need to look up derivatives you have already computed
+    }
 //     printf("tau %f\n", *tau);
     if (derivatives){
       for (int k = 1; k < 5; k++){

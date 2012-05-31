@@ -20,7 +20,6 @@
 // Last changed: 2012-05-04
 
 #include "FDDerivator.h"
-#include <iostream>
 
 namespace pmfpack
 {

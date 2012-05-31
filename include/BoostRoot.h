@@ -24,7 +24,6 @@
 
 #include <boost/math/tools/roots.hpp>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include "Root.h"
 
 namespace pmfpack
@@ -33,7 +32,6 @@ namespace pmfpack
   class BoostRoot : public Root
   {
   public:
-    BoostRoot() {};
     
     BoostRoot(Integrator *);
     

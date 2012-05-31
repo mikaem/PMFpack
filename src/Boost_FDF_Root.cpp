@@ -34,7 +34,7 @@ namespace pmfpack{
     upper = 1.-1.e-6;    
     fdfsolver = 0;
     maxiter = 100;
-//     digits = std::numeric_limits<double>::digits/2;
+//     digits = numeric_limits<double>::digits/2;
     digits = 48;
   }
     
@@ -65,20 +65,20 @@ namespace pmfpack{
     if (fdfsolver == 0)
     {
       x = boost::math::tools::newton_raphson_iterate(*F2, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
-      if (verbose) std::cout << " Boost Newton Raphson " << std::endl;
+      if (verbose) cout << " Boost Newton Raphson " << endl;
     }
     else if (fdfsolver == 1)
     {
       x = boost::math::tools::halley_iterate(*F3, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
-      if (verbose) std::cout << " Boost halley_iterate " << std::endl;
+      if (verbose) cout << " Boost halley_iterate " << endl;
     }
     else if (fdfsolver == 2)
     {
       x = boost::math::tools::schroeder_iterate(*F3, sqrt(1 - 2 * (*tau)), lower, upper, digits, it);
-      if (verbose) std::cout << " Boost schroeder_iterate " << std::endl;
+      if (verbose) cout << " Boost schroeder_iterate " << endl;
     }
     (*tau) = (1 - x * x) / 2;
-    if (verbose) std::cout << " Root = " << (*tau) << " iterations " << it << std::endl;
+    if (verbose) cout << " Root = " << (*tau) << " iterations " << it << endl;
     
     return (*tau);
   }

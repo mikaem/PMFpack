@@ -36,7 +36,6 @@ namespace pmfpack
   class GSLRoot : public Root
   {
   public:
-    GSLRoot();
     
     GSLRoot(Integrator *);
     

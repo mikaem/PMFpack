@@ -40,17 +40,6 @@ namespace pmfpack
     s->fdf = NULL;
     return s;
   }
-
-  GSL_FDF_Root::GSL_FDF_Root()
-  : GSLRoot()
-  {
-      T = gsl_root_fdfsolver_newton;      
-      s = gsl_root_fdfsolver_alloc(T);      
-      F.f = &gslfunc;      
-      F.df = &gsldfunc;            
-      F.fdf = &gslfdfunc;      
-      F.params = integrator;    
-  }
   
   GSL_FDF_Root::GSL_FDF_Root(Integrator *_integrator)
   : GSLRoot(_integrator)
@@ -104,14 +93,15 @@ namespace pmfpack
       status = gsl_root_fdfsolver_iterate (s);
       x0 = x;
       x = gsl_root_fdfsolver_root (s);
+      double tol = 1.e-13;
       if (x < 0.5){
-        status = gsl_root_test_delta (x, x0, 1e-15, 1e-14);
-        status2 = gsl_root_test_residual((*f), 1e-15);
-        status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
+        status = gsl_root_test_delta (x, x0, tol, tol);
+        status2 = gsl_root_test_residual((*f), tol);
+        status3 = (fabs((*f) / (*df)) < tol) ? 0 : 1;}
       else{
-        status = gsl_root_test_delta (1-x, 1-x0, 1e-15, 1e-14);
-        status2 = gsl_root_test_residual((*f), 1e-15);
-        status3 = (fabs((*f) / (*df)) < 1e-16) ? 0 : 1;}
+        status = gsl_root_test_delta (1-x, 1-x0, tol, tol);
+        status2 = gsl_root_test_residual((*f), tol);
+        status3 = (fabs((*f) / (*df)) < tol) ? 0 : 1;}
       if (status == GSL_SUCCESS || status2 == GSL_SUCCESS || status3 == GSL_SUCCESS)
         status = GSL_SUCCESS;
       

@@ -22,11 +22,8 @@
 #ifndef __ROOT_H
 #define __ROOT_H
 
-#include <iostream>
-#include <iomanip>
 #include "Integrator.h"
 #include "GSLIntegrator.h"
-#include "MyMath.h"
 
 namespace pmfpack
 {
@@ -38,9 +35,7 @@ namespace pmfpack
   class Root
   {
   public:
-                      
-    Root();
-    
+
     Root(Integrator *);
     
     virtual ~Root() {};    
@@ -69,8 +64,6 @@ namespace pmfpack
     Root *froot, *fdfroot;
     bool *central;
   } Roots;
-
-
 
 }
 

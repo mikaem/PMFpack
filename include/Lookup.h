@@ -22,8 +22,6 @@
 #ifndef __LOOKUP_H
 #define __LOOKUP_H
 
-#include <iostream>
-#include <iomanip>
 #include "Derivator.h"
 
 namespace pmfpack
@@ -65,11 +63,11 @@ namespace pmfpack
         
     virtual void init(int, int);
     
-    virtual void operator()(int, bool derivatives=false) = 0;
+    virtual void operator()(int, bool derivatives=false, bool polish=false) = 0;
     
-    virtual void compute(int, bool derivatives=false) = 0;
+    virtual void compute(int, bool derivatives=false, bool polish=false) = 0;
     
-    virtual void read_table(char*) = 0;
+    virtual int read_table(char*) = 0;
     
     virtual void generate_table(int, int, char*) = 0;
     

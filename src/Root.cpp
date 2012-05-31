@@ -25,12 +25,7 @@ using namespace std;
 
 namespace pmfpack
 {
-    
-  Root::Root()
-  {
-    max_iteration = 100;    
-  }
-  
+
   Root::Root(Integrator *_integrator)
   : integrator(_integrator)
   {

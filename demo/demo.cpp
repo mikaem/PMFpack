@@ -20,6 +20,7 @@
 // Last changed: 2012-05-14
 
 #include "PMF.h"
+#include <time.h>
 
 using namespace pmfpack;
 using namespace std;
@@ -43,7 +44,7 @@ int main()
     sigma = intensity_of_segregation * fmean * (1 - fmean);
     
     // Create a new PMF object 
-    PMF *pmf = new PMF(fmean, sigma, 1, 1, 0, 1);
+    PMF *pmf = new PMF(fmean, sigma, 0, 0, 0, 1);
     
     // Specify mean flow parameters from the simulation
     pmf->set_fmean_gradient(-0.3496497, 0, 0);
@@ -55,15 +56,28 @@ int main()
 //      pmf->roots->froot->realloc(2);
     pmf->roots->froot->error_message_off();
     pmf->verbose = 0;
-    pmf->compute(0, true);
+    clock_t start = clock();
+    for (int i=0; i<100; i++){
+      pmf->tau = 0.1;
+      pmf->compute(0, true);
+    }
+    double duration = (double)(clock() - start) / CLOCKS_PER_SEC;
+//    std::cout.precision(8);
+    std::cout << "Computed tau  " << pmf->tau << " time " << duration/100 << std::endl;
     std::cout << pmf->tau << " " << pmf->dtaudf << " " << pmf->dtauds << std::endl;
     
     // Test lookuptable
     GSLLookup *lookuptable = new GSLLookup(pmf->derivator);
-    lookuptable->generate_table(30, 30, "GSL_test_table.dat");
+    lookuptable->generate_table(10, 10, "GSL_test_table.dat");
     //lookuptable->read_table("GSL_test_table.dat");
     std::cout << "Look up tau etc" << std::endl;
-    lookuptable->compute(0, true);  // Look up tau etc
+    start = clock();
+    for (int i=0; i<100; i++){
+//      lookuptable->compute(0, true);  // Look up tau etc
+       lookuptable->compute(0, true, true);  // With root-polishing
+    }
+    duration = (double)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Looked up tau  " << pmf->tau << " time " << duration/100. << std::endl;
     std::cout << pmf->tau << " " << pmf->dtaudf << " " << pmf->dtauds << std::endl;
         
     // Compute all possible conditional models

@@ -22,11 +22,11 @@
 #ifndef __INTEGRATOR_H
 #define __INTEGRATOR_H
 
-#include "MyMath.h"
+#include "PMFMath.h"
 
 namespace pmfpack
 {
-  double function(const double, void *);
+  double function(const double, double **);
 
   class Integrator
   {
