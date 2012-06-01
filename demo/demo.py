@@ -35,14 +35,14 @@ print "Generated Lookup table ", time() - t0
 
 # Test first by simply computing tau and its derivatives
 t0 = time()
-for i in range(1):      # 100 times for timing purpose
+for i in range(100):      # 100 times for timing purpose
     pmf.tau = 0.1         # Initial guess
     pmf.compute(0, True)  # 0 for verbose, True for computing derivatives
 print "\nComputed tau  ", pmf.tau, " dtaudf ", pmf.dtaudf, " d2taudfdf ", pmf.d2taudfdf, " time ", (time() - t0) / 100
 
 ## Find the same parameters using a lookuptable
 t0 = time()
-for i in range(1):
+for i in range(100):
     lookuptable(0, True)
 print "\nLookup without root-polishing:"
 print "Looked up tau ", pmf.tau, " dtaudf ", pmf.dtaudf, " d2taudfdf ", pmf.d2taudfdf, " time ", (time() - t0) / 100
@@ -50,7 +50,7 @@ print "Looked up tau ", pmf.tau, " dtaudf ", pmf.dtaudf, " d2taudfdf ", pmf.d2ta
 # Finally we test by looking up tau and then using a root-polishing routine for accuracy
 # This basically means that the lookuptable is used to compute an initial guess
 t0 = time()
-for i in range(1):
+for i in range(100):
     lookuptable(0, True, True)
 print "\nLookup with root-polishing:"
 print "Looked up tau ", pmf.tau, " dtaudf ", pmf.dtaudf, " d2taudfdf ", pmf.d2taudfdf, " time ", (time() - t0) / 100
