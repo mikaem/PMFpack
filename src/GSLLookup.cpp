@@ -120,9 +120,9 @@ namespace pmfpack
     
     fprintf(f1, "%d %d\n", Nf, Ns);
     for(int i = 0; i < Nf; i++)
-      fprintf(f1, "%10f\n", fm[i]);
+      fprintf(f1, "%4.16e\n", fm[i]);
     for(int i = 0; i < Ns; i++)
-      fprintf(f1, "%10f\n", Is[i]);
+      fprintf(f1, "%4.16e\n", Is[i]);
     fprintf(f1, "%d\n", grid_type);
     for (int k = 0; k < 5; k++){
       for(int i = 0; i < Nf; i++){
@@ -132,7 +132,7 @@ namespace pmfpack
           (*im) = (*sigma) + fm[i] * fm[i];
           derivator->compute(0);        
           tau_table[k][i][j] = (*dtau[k]);
-          fprintf(f1,"%10f\n", (*dtau[k]));
+          fprintf(f1,"%4.16e\n", (*dtau[k]));
         }
       }
     }
@@ -163,10 +163,10 @@ namespace pmfpack
     uint m, n, ms1, ms2, ns1, ns2, ms, ns, check;
     double *x1s, *x2s, dy;
 
-    // Locate point
+    // Locate point in lookuptable
     locate(&m, &n);
     
-    // Compute if outside of table borders
+    // Compute if point is outside of table borders
     if (m == 0 || n == 0 || m == Nf || n == Ns)
     {
       if (derivatives)
@@ -220,7 +220,6 @@ namespace pmfpack
         derivator->roots->fdfroot->compute(verbose);
       return; // Return because you don't need to look up derivatives you have already computed
     }
-//     printf("tau %f\n", *tau);
     if (derivatives){
       for (int k = 1; k < 5; k++){
         for(int i = m-ms1; i < m+ms2; i++){

@@ -41,20 +41,25 @@ namespace pmfpack
     gsl_cheb_free(c2);
   }
   
+  void ChebDerivator::set_derivative_order(int order)
+  {
+    gsl_cheb_free(c);
+    gsl_cheb_free(c1);
+    gsl_cheb_free(c2);
+    cheb_order = order;
+    c  = gsl_cheb_alloc(cheb_order);
+    c1 = gsl_cheb_alloc(cheb_order);
+    c2 = gsl_cheb_alloc(cheb_order);    
+  }
+  
   double ChebDerivator::compute(int verbose)
   {
-    double fmean0, sigma0, alfa0, tau0, im0, dh, dh0, aerr;
-    double tau_p, tau_m, s, s1,i1, error, error1;
-    int    dhi, count;
-
-    fmean0 = (*fmean);
-    im0 = (*im);
-    sigma0 = (*sigma);    
-//     fmean0 = gsl_min(fmean0, 1-fmean0);
-    dh = gsl_min(sigma0, fmean0 - im0);
-    dh = gsl_min(dh, fabs(((1 - 2 * fmean0) + sqrt(1 - 4 * sigma0)) / 2));
-    dh = gsl_min(dh, fabs(((1 - 2 * fmean0) - sqrt(1 - 4 * sigma0)) / 2));
-    dh = gsl_min(1e-3, dh * 0.2);
+    double dh, aerr, error, error1;
+    
+    dh = gsl_min((*fmean), 1 - (*fmean));  //   0 < f < 1
+    dh = gsl_min(dh, gsl_min((*sigma), (*fmean) * (1 - (*fmean)) - (*sigma)));            //   0 < sigma < f * (1 - f)
+    dh = gsl_min(dh / 10., 1e-4);
+    dh = pow(2, (int) log2(dh));
     
     // Compute central tau first using a robust bracketing algorithm
     roots->froot->compute(0);

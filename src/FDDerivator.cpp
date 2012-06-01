@@ -28,70 +28,25 @@ namespace pmfpack
   
   double FDDerivator::compute(int verbose)
   {
-    double fmean0, tau0, im0, dh, dh0;
-    double tau_p, tau_m, s, s1,i1;
-    int    dhi, count;
+    double dh, tau_p, tau_m;
 
-    fmean0 = (*fmean);
-    im0 = (*im);
-
-    // Set the s pointer to either sigma or im
-    s = *roots->central ? (*sigma) : (*im); 
-    // Get the largest possible dh. This is computed from 0<I<1, by taking all combinations of f+-dh,s+-dh.
-    // This is valid also for d2tau/dfmean/dsigma
-    if (!(*roots->central)){
-      dh = sqrt(s) - fmean0;
-      dh = gsl_min(dh, 0.5 * (fmean0 - s));
-      dh = gsl_min(dh, s - fmean0 * fmean0);
-      dh = gsl_min(dh, ((-(2. * fmean0 - 1.) + sqrt(4. * (s - fmean0) + 1.)) / 2.));
-      dh = gsl_min(dh, ((2. * fmean0 + 1. + sqrt(4. * (s + fmean0) + 1.)) / 2.));
-      dh = gsl_min(dh, ((-(2. * fmean0 + 1.) + sqrt(4. * (s + fmean0) + 1.)) / 2.));   
-      dh = gsl_min(dh, ((2. * fmean0 - 1. + sqrt(4. * (s - fmean0) + 1.)) / 2.));
-    }
-    else{
-      dh = (-(2. * fmean0 - 1.) + sqrt(1. - 4. * s)) / 2.;
-      dh = gsl_min(dh, (2. * fmean0 - 1. + sqrt(1. - 4. * s)) / 2);
-      dh = gsl_min(dh, fmean0 - (fmean0 * fmean0 + s));
-      dh = gsl_min(dh, -fmean0 + sqrt(fmean0 - s));
-      dh = gsl_min(dh, fmean0 - 1. + sqrt(1. - fmean0 - s));
-      dh = gsl_min(dh, -(fmean0 - 1.) + sqrt(1. - fmean0 - s));
-      dh = gsl_min(dh, s);
-    }
-    dh = gsl_min(5.e-4, dh / 250.);
-    dhi = (int) log10(dh);
-    dh = pow(10, dhi);
-    dh0 = dh;
+    // Find appropriate dh.    
+    dh = gsl_min((*fmean), 1 - (*fmean));  //   0 < f < 1
+    dh = gsl_min(dh, gsl_min((*sigma), (*fmean) * (1 - (*fmean)) - (*sigma)));            //   0 < sigma < f * (1 - f)
+    dh = gsl_min(dh / 10., 1e-5);
+    dh = pow(2, (int) log2(dh));
     
     // Compute central tau first using a robust bracketing algorithm 
     roots->froot->compute(0);
-    tau0 = (*tau);
-    tau_m = 1.;
-    count = 0;
     
-    while((tau_m > 0.005 || tau_m < 0.0005) && count < 5){
-      // Find an appropriate dh
-      if (tau_m > 0.005) dh = dh / 10;
-      else dh = dh * 10;
-      tau_p = dfunction_df(+dh, roots);
-      tau_m = (fabs(tau_p - tau0) / tau0);
-      count++;
-    }
+    tau_p = dfunction_df(+dh, roots);
     tau_m = dfunction_df(-dh, roots);
     (*dtaudf) = (tau_p - tau_m) / 2. / dh;
-    (*d2taudfdf) = (tau_p - 2. * tau0 + tau_m) / dh / dh;
+    (*d2taudfdf) = (tau_p - 2. * (*tau) + tau_m) / dh / dh;
     
-    count = 0;
-    while((tau_m > 0.005 || tau_m < 0.0005) && count < 5){
-      // Find an appropriate dh
-      if (tau_m > 0.005) dh = dh / 10;
-      else dh = dh * 10;
-      tau_p = dfunction_ds(+dh, roots);
-      tau_m = (fabs(tau_p - tau0) / tau0);
-      count++;
-    }
+    tau_p = dfunction_ds(+dh, roots);
     tau_m = dfunction_ds(-dh, roots);
     (*dtauds) = (tau_p - tau_m) / 2. / dh;
-    (*d2taudsds) = (tau_p - 2. * tau0 + tau_m) / dh / dh;
-    
+    (*d2taudsds) = (tau_p - 2. * (*tau) + tau_m) / dh / dh;
   }
 }

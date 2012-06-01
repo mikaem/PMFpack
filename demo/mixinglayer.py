@@ -80,8 +80,8 @@ class diffusion:
         self.wa = self.wa * 0.
         yv = reshape(self.wa, (2,-1))
         xi = reshape(xis, (2,-1))
-        xi[:, 0] = xi[:, 1]
-        xi[:, -1] = xi[:, -2]
+        xi[:, 0] = 4. / 3. * xi[:, 1] - 1. / 3. * xi[:, 2]
+        xi[:, -1] = 4. / 3. * xi[:, -2] - 1. / 3. * xi[:, -3]
         yv[0, 1:-1] = (xi[0, 2:] - 2. * xi[0, 1:-1] + xi[0, :-2]) / self.dy**2
         yv[1, 1:-1] = (xi[1, 2:] - 2. * xi[1, 1:-1] + xi[1, :-2]) / self.dy**2 - self.itau * (xi[1, 1:-1] - xi[0, 1:-1]**2)        
         return self.wa
@@ -93,8 +93,8 @@ class diffusion:
         self.z, self.infodict = odeint(self.func, self.xis, self.tv, full_output=True)
         sz = self.z.shape
         self.z = reshape(self.z, (sz[0], 2, self.Np))
-        self.z[:, :, 0] = self.z[:, :, 1]
-        self.z[:, :, -1] = self.z[:, :, -2]
+        self.z[:, :, 0] = 4. / 3. * self.z[:, :, 1] - 1. / 3. * self.z[:, :, 2]
+        self.z[:, :, -1] = 4. / 3. * self.z[:, :, -2] - 1. / 3. * self.z[:, :, -3]
         self.chi = self.itau * (self.z[:, 1, :] - self.z[:, 0, :]**2) # chi = 2N, i.e it includes the number 2 in the def
         
     def dxidy(self, t):
@@ -113,7 +113,7 @@ def Conditionals(t, nx, sol, central=False, lookup=None, pmfclass=None):
     
     dfdy, dmdy, dsdy = sol.dxidy(t)
     fmean = sol.z[t, 0, nx]
-    sigma = (sol.z[t, 1, nx] - fmean**2)
+    sigma = sol.z[t, 1, nx] - fmean**2
     if pmfclass == None:
         pmf = PMF(fmean, sigma, 0, 0, 0, 1)
     else:

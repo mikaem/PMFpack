@@ -26,7 +26,7 @@
 #ifndef __PMF_H
 #define __PMF_H
 
-#include <iostream>
+//#include <iostream>
 #include <assert.h>
 
 #include "Boost_F_Root.h"
@@ -39,6 +39,7 @@
 #include "Derivator.h"
 #include "FDDerivator.h"
 #include "ChebDerivator.h"
+#include "AdaptiveChebDerivator.h"
 #include "Lookup.h"
 #include "GSLLookup.h"
 
@@ -49,7 +50,7 @@ namespace pmfpack
   {
   public:
     
-    PMF(double fmean, double sigma, int fsolver=0, int fdfsolver=0, int integral=0, int derivator=0);
+    PMF(double fmean, double sigma, int fsolver=0, int fdfsolver=0, int integral=0, int derivator=1);
     
     ~PMF();
     

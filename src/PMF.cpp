@@ -44,7 +44,7 @@ namespace pmfpack
     verbose = 0;    
     chi = 1.;    
     DT = 1.;
-    cheb_order = 6;
+    cheb_order = 8;
     set_parameters(_fmean, _sigma);
     parameters[0] = &fmean;
     parameters[1] = &sigma;
@@ -146,6 +146,11 @@ namespace pmfpack
     {
       cout << "Chebyshev derivator" << endl; 
       derivator = new ChebDerivator(roots, cheb_order);
+    }
+    else if (deriv == 2)
+    {
+      cout << "Adaptive Chebyshev derivator" << endl; 
+      derivator = new AdaptiveChebDerivator(roots, 16);
     }
     else
     {
