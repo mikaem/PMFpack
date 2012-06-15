@@ -35,13 +35,13 @@ namespace pmfpack
   {
     F.function = &gslfunction;    
     F.params = parameters;
-    w = gsl_integration_workspace_alloc (1000);      
+//     w = gsl_integration_workspace_alloc (1000);      
     table = gsl_integration_glfixed_table_alloc(96);   
   }
   
   GSLIntegrator::~GSLIntegrator()
   {
-    gsl_integration_workspace_free(w);
+//     gsl_integration_workspace_free(w);
     gsl_integration_glfixed_table_free(table);
   }
   

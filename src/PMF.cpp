@@ -687,24 +687,20 @@ namespace pmfpack
     //   II(eta) = eta * erf(phi / sqrt(1. - 2. * tau)) - \int_{-\infty}^{phi} X(phi') * r(phi') dphi' 
     //
     // where erf as before really is the normal distribution (see PMFMath.cpp) 
-    double phi, f1, phi_min;
-    gsl_integration_workspace *w = gsl_integration_workspace_alloc (100);      
+    double phi, phi_min;
     gsl_integration_glfixed_table *table = gsl_integration_glfixed_table_alloc(96);
     gsl_function F;
     
     F.function = &xr;
     F.params = parameters;
     
+    phi_min = alfa - 12. * sqrt(2. * tau);
     for (int i=0; i<N1; i++)
     {
       phi = alfa + sqrt(2. * tau) * erfinv(eta[i]);
-      f1 = eta[i] * erf(phi / sqrt(1. - 2. * tau));
-      phi_min = alfa - 12. * sqrt(2. * tau);
-      x[i] = f1 - gsl_integration_glfixed (&F, phi_min, phi, table);
-    }
-    
-    gsl_integration_workspace_free(w);
+      x[i] = eta[i] * erf(phi / sqrt(1. - 2. * tau));
+      x[i] -= gsl_integration_glfixed (&F, phi_min, phi, table);
+    }    
     gsl_integration_glfixed_table_free(table);
   }
-  
 }

@@ -104,8 +104,8 @@ namespace pmfpack
     void CSD(double *, int, double *, int);
     void CSD(double *, int, double *, int, double, double, double);
     
-    double CSD2(double);
-    void CSD2(double *, int, double *, int);
+    double CSD_verify(double);
+    void CSD_verify(double *, int, double *, int);
 
     double Laplace(double);
     void Laplace(double *, int, double *, int);

@@ -44,7 +44,7 @@ int main()
     sigma = intensity_of_segregation * fmean * (1 - fmean);
     
     // Create a new PMF object 
-    PMF *pmf = new PMF(fmean, sigma, 0, 0, 0, 1);
+    PMF *pmf = new PMF(fmean, sigma, 0, 0, 0, 2);
     
     // Specify mean flow parameters from the simulation
     pmf->set_fmean_gradient(-0.3496497, 0, 0);
@@ -106,11 +106,11 @@ int main()
     pmf->CV(0.2, cv, 3);
     std::cout << " CV[0] " << cv[0] << std::endl;
     start = clock();
-    for (int i=0; i<100000; i++) pmf->CSD2(eta, N, p, N);
+    for (int i=0; i<100000; i++) pmf->CSD_verify(eta, N, p, N);
     duration = (double)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << "Time CSD2 " << duration / 100000. << endl;
+    std::cout << "Time CSD2 " << duration / 100000. << " value " << p[4] << endl;
     start = clock();
     for (int i=0; i<100000; i++) pmf->CSD(eta, N, p, N);
     duration = (double)(clock() - start) / CLOCKS_PER_SEC;
-    std::cout << "Time CSD  " << duration / 100000. << endl;
+    std::cout << "Time CSD  " << duration / 100000. << " value " << p[4] << endl;
 }
