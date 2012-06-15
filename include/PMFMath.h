@@ -41,6 +41,7 @@ namespace pmfpack
   // Inverse error functions NIM7=Erfinv(1e-7)
   #define NIM7 -5.1993375821928174
   #define NIM8 -5.6120012441747891
+  #define NIM9 -5.9978070150076865
   #define NIM14 -7.6506280929352686
   #define NIM15 -7.941345326170997
   #define NIM16 -8.2220822161304365

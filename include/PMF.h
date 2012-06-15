@@ -102,7 +102,7 @@ namespace pmfpack
     
     double CSD(double);
     void CSD(double *, int, double *, int);
-    void CSD(double *, int, double *, int, double, double, double);
+    void CSD(double *, int, double *, int, double, double, double); 
     
     double CSD_verify(double);
     void CSD_verify(double *, int, double *, int);

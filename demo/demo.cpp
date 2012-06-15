@@ -51,6 +51,9 @@ int main()
     pmf->set_sigma_gradient(-0.4294126, 0, 0);
     pmf->chi = 1.003770;
     pmf->DT = 1.;
+    
+    printf(" Erfinv(1e-8) %4.16e ", boost_erfinv(1e-8));
+    printf(" Erfinv(1e-9) %4.16e ", boost_erfinv(1e-9));
 
     // Compute tau and derivatives of tau
 //      pmf->roots->froot->realloc(2);
