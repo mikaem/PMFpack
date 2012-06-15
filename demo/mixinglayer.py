@@ -169,7 +169,7 @@ def Conditionals(t, nx, sol, central=False, lookup=None, pmfclass=None, _plot=Fa
     return pmf
     
 if __name__ == "__main__":
-    sol = mixinglayer(itau=1., L=8., t=2., Nt=100)
+    sol = mixinglayer(itau=10., L=8., t=2., Nt=100)
     sol.init()
     sol.solve()
     f  = sol.z[:, 0, :]
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     s = im - f * f
     x = s / f / (1-f)    
     
-    pmf = Conditionals(10, 30, sol, _plot=True)
+    pmf = Conditionals(20, 45, sol, _plot=True)
     
     #nt, nz = x.shape
     #tau = zeros((nt, nz))

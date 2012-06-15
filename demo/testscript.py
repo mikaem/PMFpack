@@ -8,33 +8,40 @@ from scipy.special import erf, erfinv
 w1 = integrate.workspace(10000)
 w2 = integrate.workspace(10000)
 
-#fmean = 0.639756248702123
-#sigma = 0.16674922174125 * fmean * (1 - fmean)
-#pmf = PMF(fmean, sigma, 0, 0, 0, 2)
-#pmf.set_fmean_gradient(-0.4178939524532, 0, 0)  # Last two are zero because the simulation is 1D
-#pmf.set_sigma_gradient(-0.5095137299633, 0, 0)
-#pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the factor 2)
+fmean = 0.639756248702123
+sigma = 0.16674922174125
+pmf = PMF(fmean, sigma, 0, 0, 0, 2)
+pmf.set_fmean_gradient(-0.4178939524532, 0, 0)  # Last two are zero because the simulation is 1D
+pmf.set_sigma_gradient(-0.5095137299633, 0, 0)
+pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the factor 2)
 
 #fmean = 0.32734785270559791
-#sigma = 0.036258388156940768 * fmean * (1 - fmean)
+#sigma = 0.036258388156940768 
 #pmf = PMF(fmean, sigma, 0, 0, 0, 2)
 #pmf.set_fmean_gradient(-0.40312611148071925, 0, 0)  # Last two are zero because the simulation is 1D
 #pmf.set_sigma_gradient(-0.29357760186462173, 0, 0)
 #pmf.chi = 0.36258388156940158  # Mean scalar dissipation rate (defined with the factor 2)
 
 #fmean = 0.67265214729440204
-#sigma = 0.036258388156940768 * fmean * (1 - fmean)
+#sigma = 0.036258388156940768
 #pmf = PMF(fmean, sigma, 0, 0, 0, 2)
 #pmf.set_fmean_gradient(-0.40312611148071925, 0, 0)  # Last two are zero because the simulation is 1D
 #pmf.set_sigma_gradient(-0.51267462109681816, 0, 0)
 #pmf.chi = 0.36258388156940158  # Mean scalar dissipation rate (defined with the factor 2)
 
-fmean = 0.49994238
-sigma = 0.13800082515647047
-pmf = PMF(fmean, sigma, 0,0,0,2)
-pmf.set_fmean_gradient(-2.22233706e+00,  -5.90368198e-05, 0)
-pmf.set_sigma_gradient(-2.22227923, -0.30140048, 0)
-pmf.chi = 50 * sigma
+#fmean = 0.67265214729440204
+#sigma = 0.1713614871658044
+#pmf = PMF(fmean, sigma, 0, 0, 0, 2)
+#pmf.set_fmean_gradient(-0.40312609644753139, 0, 0)  # Last two are zero because the simulation is 1D
+#pmf.set_sigma_gradient(-0.43099826527099522, 0, 0)
+#pmf.chi = 0.1713614871658044  # Mean scalar dissipation rate (defined with the factor 2)
+
+#fmean = 0.49994238
+#sigma = 0.13800082515647047
+#pmf = PMF(fmean, sigma, 0,0,0,2)
+#pmf.set_fmean_gradient(-2.22233706e+00,  -5.90368198e-05, 0)
+#pmf.set_sigma_gradient(-2.22227923, -0.30140048, 0)
+#pmf.chi = 50 * sigma
 
 pmf.DT = 1.         # Turbulent diffusivity
 
