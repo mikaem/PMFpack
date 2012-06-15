@@ -26,9 +26,9 @@ namespace pmfpack
   Integrator::Integrator(double *_parameters[])
   : parameters(_parameters) 
   {
-    alfa = parameters[2];
-    tau  = parameters[3];
-    im   = parameters[4];
+    alfa  = parameters[2];
+    tau   = parameters[3];
+    im    = parameters[4];
   }
   
   double function(const double phi, double **data)
@@ -37,5 +37,6 @@ namespace pmfpack
     double tau = (*data[3]); 
     double X = erf((tau * phi - alfa) / sqrt(1 - tau * tau));
     return X * X * exp(- phi * phi / 2);
-  }    
+  }
+  
 }

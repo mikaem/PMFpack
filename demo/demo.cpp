@@ -105,4 +105,12 @@ int main()
     std::cout << " Laplace " << pmf->Laplace(0.2) << std::endl;
     pmf->CV(0.2, cv, 3);
     std::cout << " CV[0] " << cv[0] << std::endl;
+    start = clock();
+    for (int i=0; i<100000; i++) pmf->CSD2(eta, N, p, N);
+    duration = (double)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Time CSD2 " << duration / 100000. << endl;
+    start = clock();
+    for (int i=0; i<100000; i++) pmf->CSD(eta, N, p, N);
+    duration = (double)(clock() - start) / CLOCKS_PER_SEC;
+    std::cout << "Time CSD  " << duration / 100000. << endl;
 }

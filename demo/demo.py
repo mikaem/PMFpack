@@ -5,14 +5,14 @@ from time import time
 
 # Initialize a PMF class that will be used to compute conditional submodels
 # The numbers here are taken from a simulation using mixinglayer.py
-fmean = 0.70837758
-sigma = 0.194360748 * fmean * (1 - fmean)
+fmean = 0.639756248702123
+sigma = 0.16674922174125 * fmean * (1 - fmean)
 pmf = PMF(fmean, sigma, 0, 0, 0, 2)
 
 # Get the necessary parameters from the same 1D simulation
-pmf.set_fmean_gradient(-0.3496497, 0, 0)  # Last two are zero because the simulation is 1D
-pmf.set_sigma_gradient(-0.4294126, 0, 0)
-pmf.chi = 1.003770  # Mean scalar dissipation rate (defined with the factor 2)
+pmf.set_fmean_gradient(-0.4178939524532, 0, 0)  # Last two are zero because the simulation is 1D
+pmf.set_sigma_gradient(-0.5095137299633, 0, 0)
+pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the factor 2)
 pmf.DT = 1.         # Turbulent diffusivity
 
 # The simulations are run using integer moments
@@ -27,7 +27,7 @@ pmf.verbose = 0
 # We can use a lookuptable for computing tau and its derivatives
 lookuptable = GSLLookup(pmf.derivator)
 t0 = time()
-Nt = 10
+Nt = 20
 lookuptable.generate_table(Nt, Nt, 'GSL_table_{0}.dat'.format(Nt)) # Create a small table for testing
 print "Generated Lookup table ", time() - t0
 # When generated it can be read in here instead:
@@ -76,4 +76,4 @@ figure()
 plot(eta, cv[0, :])
 xlabel("$\eta$", fontsize='large')
 title("Conditional mean velosity")
-show()
+#show()

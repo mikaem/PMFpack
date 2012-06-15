@@ -46,7 +46,6 @@ namespace pmfpack
     dtauds = roots->froot->parameters[8];
     d2taudfdf = roots->froot->parameters[9];
     d2taudsds = roots->froot->parameters[10];
-    
   }
   
   double dfunction_df(const double df, void *pars)
@@ -54,12 +53,13 @@ namespace pmfpack
     /*
      * Add a tiny df to fmean, modify im, compute tau and then reset fmean + im.
      */
-    double fmean0, im0, alfa0, tau0, newtau;
+    double fmean0, im0, alfa0, sigma0, tau0, newtau;
     Roots *roots = (Roots *) pars;
     double **p = roots->fdfroot->parameters;
     
     // Remember old values
     fmean0 = (*p[0]);
+    sigma0 = (*p[1]);
     alfa0 = (*p[2]);
     tau0 = (*p[3]);
     im0 = (*p[4]);
@@ -67,12 +67,14 @@ namespace pmfpack
     // Modify parameters
     (*p[0]) = (*p[0]) + df;
     (*p[4]) = *roots->central ? (*p[0]) * (*p[0]) + (*p[1]) : (*p[4]);
+    (*p[1]) = (*p[4]) - (*p[0]) * (*p[0]); 
     
     // Compute new tau
     roots->fdfroot->compute(0);
     
     // Reset to old values
     (*p[0]) = fmean0;
+    (*p[1]) = sigma0;
     (*p[2]) = alfa0;
     (*p[4]) = im0;
     newtau = (*p[3]);
@@ -86,22 +88,25 @@ namespace pmfpack
     /*
      * Add a tiny ds to variance, modify im, compute tau and then reset im.
      */
-    double im0, tau0, newtau;
+    double im0, tau0, newtau, sigma0;
     Roots *roots = (Roots *) pars;
     double **p = roots->fdfroot->parameters;
     
     // Remember old values
     tau0 = (*p[3]);
     im0 = (*p[4]);
+    sigma0 = (*p[1]);
         
     // Modify parameters (only im used in fdfroot->compute)
     (*p[4]) = (*p[4]) + ds;
+    (*p[1]) = (*p[1]) + ds; 
 
     // Compute new tau
     roots->fdfroot->compute(0);
     
     // Reset to old values
     (*p[4]) = im0;
+    (*p[1]) = sigma0;
     newtau = (*p[3]);
     (*p[3]) = tau0;
 

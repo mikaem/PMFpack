@@ -31,7 +31,6 @@ using namespace pmfpack;
 
 %init %{
   import_array();
-
 %}
 
 %feature("autodoc",1);

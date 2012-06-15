@@ -75,6 +75,17 @@ namespace pmfpack{
   {
     double x, xlo, xhi, x0;
     int status, status2, status3, iter, reset;
+    bool reversed;    
+
+    if ((*fmean) > 0.5)
+    {
+      reversed = true;
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+    }
+    else{
+      reversed = false;
+    }
 
     (*alfa) = erfinv(1 - (*fmean));
     status = gsl_root_fsolver_set (s, &F, lower, upper);
@@ -117,6 +128,13 @@ namespace pmfpack{
     while (status == GSL_CONTINUE && iter < max_iteration);
     
     (*tau) = (1 - x * x) / 2;
+    
+    if (reversed == true)
+    {
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+      (*alfa) = erfinv(1 - (*fmean));
+    }
     
     return (*tau);
   }

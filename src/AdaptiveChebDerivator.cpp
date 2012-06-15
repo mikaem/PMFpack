@@ -194,7 +194,7 @@ namespace pmfpack
       newerror = fabs(ord * ord * c->c[cheb_order - stride]);
       pmf_cheb_calc_deriv(c1, c, ord, cheb_order);   // First derivative
       deriv = pmf_cheb_eval(c1, 0, ord, cheb_order); // Its value, used for scaling the tolerance
-      printf(" stride %d newerror %2.4e val %2.4e tol %2.4e\n", stride, newerror, deriv,  tol * fabs(deriv));      if (newerror < tol * fabs(deriv) || ord == cheb_order) break;
+//       printf(" stride %d newerror %2.4e val %2.4e tol %2.4e\n", stride, newerror, deriv,  tol * fabs(deriv));      if (newerror < tol * fabs(deriv) || ord == cheb_order) break;
     }
     pmf_cheb_calc_deriv(c2, c1, ord, cheb_order); // Second derivative
     (*dtaudf)    = deriv;
@@ -215,7 +215,7 @@ namespace pmfpack
       newerror = fabs(ord * ord * c->c[cheb_order - stride]);
       pmf_cheb_calc_deriv(c1, c, ord, cheb_order);   // First derivative
       deriv = pmf_cheb_eval(c1, 0, ord, cheb_order); // Its value, used for scaling the tolerance
-      printf(" stride %d newerror %2.4e val %2.4e tol %2.4e\n", stride, newerror, deriv,  tol * fabs(deriv));
+//       printf(" stride %d newerror %2.4e val %2.4e tol %2.4e\n", stride, newerror, deriv,  tol * fabs(deriv));
       if(newerror < tol * fabs(deriv) || ord == cheb_order) break;
     }
     pmf_cheb_calc_deriv(c2, c1, ord, cheb_order); // Second derivative

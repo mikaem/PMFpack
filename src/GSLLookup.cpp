@@ -62,7 +62,7 @@ namespace pmfpack
         
     stream = fopen(filename, "r");
     if ((stream = fopen(filename, "r")) == NULL)
-        return -1;
+      return -1;
     status = fscanf(stream, "%d", &Nf);
     status = fscanf(stream, "%d", &Ns);
 

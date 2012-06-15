@@ -26,7 +26,6 @@
 #ifndef __PMF_H
 #define __PMF_H
 
-//#include <iostream>
 #include <assert.h>
 
 #include "Boost_F_Root.h"
@@ -60,21 +59,21 @@ namespace pmfpack
         
     double grad_f[3], grad_s[3]; // Gradients of fmean and sigma
     
-    double chi;    // Mean scalar dissipation rate
+    double chi;              // Mean scalar dissipation rate
     
-    double DT;     // Turbulent diffusion rate
+    double DT;               // Turbulent diffusion rate
     
     Integrator *integrator;  // Class that performs the integral to determine tau (Eq. 17 of Mortensen and Andersson, FTC 2006)
     
     Roots *roots;            // struct of *froot, *fdfroot and *central
     
-    Derivator *derivator;
+    Derivator *derivator;    // Class that differentiates tau wrt fmean and sigma or im
     
-    int verbose;
+    int verbose;             // Print out some info if true
     
-    bool central;
+    bool central;            // True if using central moments, false if using integer moments
     
-    int cheb_order; // Order of Chebyshev approximations used in derivatives
+    int cheb_order;          // Order of Chebyshev approximations used in derivatives
     
     void set_parameters(double, double);
     
@@ -92,9 +91,9 @@ namespace pmfpack
 
     void set_integrator(int);
     
-    void compute(int, bool derivatives=false); 
+    void compute(int, bool derivatives=false);  // Compute tau with or without derivatives
     
-    // Conditional models
+    // Conditional models. All models are defined such that they can be computed for a single value of the mixture fraction (eta), or for an array of eta.
     double PDF(double);    
     void PDF(double *, int, double *, int);
     
@@ -103,13 +102,21 @@ namespace pmfpack
     
     double CSD(double);
     void CSD(double *, int, double *, int);
+    void CSD(double *, int, double *, int, double, double, double);
     
+    double CSD2(double);
+    void CSD2(double *, int, double *, int);
+
     double Laplace(double);
     void Laplace(double *, int, double *, int);
         
     void CV(double, double *, int);    
     void CV(double *, int, double *, int, int);
+    
+    double II(double);
+    void II(double *, int, double *, int);
   };
+  
 }
 
 #endif

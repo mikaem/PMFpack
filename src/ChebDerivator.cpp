@@ -63,6 +63,20 @@ namespace pmfpack
     
     // Compute central tau first using a robust bracketing algorithm
     roots->froot->compute(0);
+    F.function = &dfunction_ds;
+    gsl_cheb_init(c, &F, -dh, dh);    
+    gsl_cheb_calc_deriv(c1, c);
+    gsl_cheb_calc_deriv(c2, c1);
+    if (verbose){
+      error = fabs(cheb_order * cheb_order * c->c[cheb_order-1]); // Approx error in derivative
+      //error1 = fabs(cheb_order * cheb_order * c1->c[cheb_order-1]); // Approx error in second derivative
+      aerr = 0.;
+      for(int i=0; i<=cheb_order; i++) aerr += fabs(c1->c[i]);
+      std::cout << "Chebyshev error sigma: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
+    }
+    (*dtauds)    = gsl_cheb_eval(c1, 0);
+    (*d2taudsds) = gsl_cheb_eval(c2, 0);    
+    
     F.function = &dfunction_df;
     gsl_cheb_init(c, &F, -dh, dh);
     gsl_cheb_calc_deriv(c1, c);  // First derivative
@@ -77,18 +91,5 @@ namespace pmfpack
     (*dtaudf)    = gsl_cheb_eval(c1, 0);
     (*d2taudfdf) = gsl_cheb_eval(c2, 0);
     
-    F.function = &dfunction_ds;
-    gsl_cheb_init(c, &F, -dh, dh);    
-    gsl_cheb_calc_deriv(c1, c);
-    gsl_cheb_calc_deriv(c2, c1);
-    if (verbose){
-      error = fabs(cheb_order * cheb_order * c->c[cheb_order-1]); // Approx error in derivative
-      //error1 = fabs(cheb_order * cheb_order * c1->c[cheb_order-1]); // Approx error in second derivative
-      aerr = 0.;
-      for(int i=0; i<=cheb_order; i++) aerr += fabs(c1->c[i]);
-      std::cout << "Chebyshev error sigma: derivative = " << error <<  ", Numerical error " << aerr*GSL_DBL_EPSILON << std::endl;
-    }
-    (*dtauds)    = gsl_cheb_eval(c1, 0);
-    (*d2taudsds) = gsl_cheb_eval(c2, 0);    
   }
 }

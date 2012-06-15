@@ -62,12 +62,23 @@ namespace pmfpack
     int status, status2, status3, iter;
     double x, x0, xhi, Is;
     double tau0;
+    bool reversed;
     
     status = 0;
     iter = 0;
     xhi = 1;
     tau0 = (*tau);
-
+    
+    if ((*fmean) > 0.5)
+    {
+      reversed = true;
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+    }
+    else{
+      reversed = false;
+    }
+    
 // Remember we are solving for sr = sqrt(1-2*tau)
 // The initial guess is for tau. Hence this must first be converted to sr
     (*alfa) = erfinv(1 - (*fmean));
@@ -118,6 +129,12 @@ namespace pmfpack
       return -1;
     }
     (*tau) = (1 - x * x) / 2; // Transform back to tau
+    if (reversed == true)
+    {
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+      (*alfa) = erfinv(1 - (*fmean));
+    }
     return (*tau);
   }
   

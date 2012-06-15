@@ -52,7 +52,17 @@ namespace pmfpack{
   {
     static double x;
     boost::uintmax_t it;
-
+    bool reversed;    
+    
+    if ((*fmean) > 0.5)
+    {
+      reversed = true;
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+    }
+    else{
+      reversed = false;
+    }
     (*alfa) = erfinv(1 - (*fmean));    
     it = maxiter;
     if (fsolver == 0)
@@ -76,7 +86,11 @@ namespace pmfpack{
     x = (found.first + found.second) / 2.;
     (*tau) = (1 - x * x) / 2;
     if (verbose) std::cout << " Root = " << (*tau) << " iterations " << maxiter << std::endl;
-    
+    if (reversed)
+    {
+      (*fmean) = 1. - (*fmean);
+      (*im) = (*fmean) * (*fmean) + (*sigma);
+    }    
     return (*tau);
   }
 }

@@ -40,7 +40,7 @@ namespace pmfpack
     virtual double compute(int) = 0;
     
     double *fmean, *sigma, *alfa, *tau, *im;
-    double *dtaudf, *dtauds, *d2taudfdf, *d2taudsds;
+    double *dtaudf, *dtauds, *d2taudfdf, *d2taudsds, *d2taudfds;
     
     Roots *roots;
         

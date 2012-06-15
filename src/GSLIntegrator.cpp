@@ -70,8 +70,7 @@ namespace pmfpack
       //status = gsl_integration_qng (&F, phi_min, phi_X_unity, aerr * (phi_max - phi_min) / 2., 0., &integral, &error, &neval) ;
       integral = gsl_integration_glfixed (&F, phi_min, phi_max, table);
       integral += SQRT2PI * (1 - erf(phi_X_unity)); // Analytical
-    }
-    
+    }    
     return integral / (*im);
   }
 }

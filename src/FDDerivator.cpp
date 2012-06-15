@@ -35,7 +35,7 @@ namespace pmfpack
     dh = gsl_min(dh, gsl_min((*sigma), (*fmean) * (1 - (*fmean)) - (*sigma)));            //   0 < sigma < f * (1 - f)
     dh = gsl_min(dh / 10., 1e-5);
     dh = pow(2, (int) log2(dh));
-    
+        
     // Compute central tau first using a robust bracketing algorithm 
     roots->froot->compute(0);
     
@@ -47,6 +47,6 @@ namespace pmfpack
     tau_p = dfunction_ds(+dh, roots);
     tau_m = dfunction_ds(-dh, roots);
     (*dtauds) = (tau_p - tau_m) / 2. / dh;
-    (*d2taudsds) = (tau_p - 2. * (*tau) + tau_m) / dh / dh;
+    (*d2taudsds) = (tau_p - 2. * (*tau) + tau_m) / dh / dh;    
   }
 }
