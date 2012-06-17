@@ -8,12 +8,12 @@ from scipy.special import erf, erfinv
 w1 = integrate.workspace(10000)
 w2 = integrate.workspace(10000)
 
-fmean = 0.639756248702123
-sigma = 0.16674922174125
-pmf = PMF(fmean, sigma, 0, 0, 0, 2)
-pmf.set_fmean_gradient(-0.4178939524532, 0, 0)  # Last two are zero because the simulation is 1D
-pmf.set_sigma_gradient(-0.5095137299633, 0, 0)
-pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the factor 2)
+#fmean = 0.639756248702123
+#sigma = 0.16674922174125
+#pmf = PMF(fmean, sigma, 0, 0, 0, 2)
+#pmf.set_fmean_gradient(-0.4178939524532, 0, 0)  # Last two are zero because the simulation is 1D
+#pmf.set_sigma_gradient(-0.5095137299633, 0, 0)
+#pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the factor 2)
 
 #fmean = 0.32734785270559791
 #sigma = 0.036258388156940768 
@@ -43,6 +43,14 @@ pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the fac
 #pmf.set_sigma_gradient(-2.22227923, -0.30140048, 0)
 #pmf.chi = 50 * sigma
 
+
+fmean = 0.030099557480701523
+sigma = 0.028047541238054665
+pmf = PMF(fmean, sigma, 1,1,0,2)
+pmf.set_fmean_gradient(-0.65591166598880513, 0, 0)
+pmf.set_sigma_gradient(-0.63360534149885717, 0, 0)
+pmf.chi = 10 * sigma
+
 pmf.DT = 1.         # Turbulent diffusivity
 
 pmf.compute(0, True)
@@ -67,6 +75,11 @@ def X(phi, a, t):
 
 def phi(x, a, t):
     return a + 2 * sqrt(t) * erfinv(2 * x - 1)
+    
+def integrand(phi, a, t):
+    sr = sqrt(1. - 2. * t)
+    x = 0.5 * (1 + erf((sr * phi - a) / sqrt(1. - sr * sr) / sqrt(2.)))
+    return x * x * exp(- phi * phi / 2.)
 
 def cdf(x, (a, t)):
     sys = integrate.gsl_function(pdf, (a, t))
@@ -336,7 +349,7 @@ def CSD(x, pmf):
     )
     return f1 + f2
 
-def CSD_numeric(x, pmf):
+def CSD_numeric(x, pmf, dh=1e-5):
     df1 = double_getitem(pmf.grad_f, 0)
     ds1 = double_getitem(pmf.grad_s, 0)
     df2 = double_getitem(pmf.grad_f, 1)
@@ -347,9 +360,9 @@ def CSD_numeric(x, pmf):
     a, t = pmf.alfa, pmf.tau
     f1 = N(x, a, t) * pmf.chi
     f2 = 2. * pmf.DT / pdf(x, a, t) * (
-        d2IIdsds_numeric(x, pmf, dh=1e-5) * sx2 +
-        d2IIdfdf_numeric(x, pmf, dh=1e-5) * fx2 +
-        2. * d2IIdfds_numeric(x, pmf, dh=1e-5) * fxsx
+        d2IIdsds_numeric(x, pmf, dh=dh) * sx2 +
+        d2IIdfdf_numeric(x, pmf, dh=dh) * fx2 +
+        2. * d2IIdfds_numeric(x, pmf, dh=dh) * fxsx
     )
     return f1 + f2
 
@@ -360,7 +373,10 @@ tests = ['dpdfdtau', 'dpdfdalfa',
          'dIIds', 'dIIdf', 'd2IIdsds', 'd2IIdfdf', 'd2IIdfds',
          'CSD']
 x = 0.5
+print "{0:>22s}{1:>14s}{2:>14s}".format("Error", "Exact", "Numeric")
 for test in tests:
-    exec('a = ' + test + '(x, pmf); b = ' + test + '_numeric(x, pmf)')
-    print test, ' error = ', a - b, ' vals ', a, b
-print pmf.CSD(x), pmf.CSD_verify(x), pmf.counterflow(x)
+    exec('a = {0}(x, pmf); b = {1}_numeric(x, pmf, dh=1e-7)'.format(test, test))
+    print '{0:12s} {1:6.6e} {2:+6.6e} {3:+6.6e}'.format(test, abs(a-b), a, b)
+print "PMFpack: {0:12s} {1}".format("CSD", pmf.CSD(x))
+print "PMFpack: {0:12s} {1}".format("CSD_verify", pmf.CSD_verify(x))
+print "PMFpack: {0:12s} {1}".format("counterflow", pmf.counterflow(x))

@@ -52,9 +52,6 @@ int main()
     pmf->chi = 1.003770;
     pmf->DT = 1.;
     
-    printf(" Erfinv(1e-8) %4.16e ", boost_erfinv(1e-8));
-    printf(" Erfinv(1e-9) %4.16e ", boost_erfinv(1e-9));
-
     // Compute tau and derivatives of tau
 //      pmf->roots->froot->realloc(2);
     pmf->roots->froot->error_message_off();

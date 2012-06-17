@@ -117,6 +117,7 @@ class mixinglayer:
         dsdy[1:-1] = dmdy[1:-1] - 2. * self.z[t, 0, 1:-1] * dfdy[1:-1]
         return dfdy, dmdy, dsdy
         
+
 def Conditionals(t, nx, sol, central=False, lookup=None, pmfclass=None, _plot=False):
     """Test of conditional models."""
     # Get the solution from mixinglayer at a certain time t and position nx
@@ -132,7 +133,7 @@ def Conditionals(t, nx, sol, central=False, lookup=None, pmfclass=None, _plot=Fa
     
     # Create a PMF class and set all parameters according to simulation
     if pmfclass == None:
-        pmf = PMF(fmean, sigma, 0, 0, 0, 2)
+        pmf = PMF(fmean, sigma, 0, 0, 0, )
     else:
         pmf = pmfclass
         pmf.set_parameters(fmean, sigma)
@@ -166,19 +167,124 @@ def Conditionals(t, nx, sol, central=False, lookup=None, pmfclass=None, _plot=Fa
         plot(eta, hcsd, 'b')
         plot(eta, csd, 'r')
         legend(('PMF-PDF','PMF-CSD Homo','PMF-CSD Full'))
-    return pmf
+    return pmf    
     
+class reactive_mixinglayer(mixinglayer):
+    def __init__(self, **kwargs):
+        if self.__class__.__name__ == 'reactive_mixinglayer':
+            self.par={
+                        'N'   : 100,
+                        'itau': 10.,
+                        'L'   : 2.,
+                        't'   : 0.1,
+                        'Nt'  : 100,
+                        'r'   : 4.,
+                        'alpha': 0.87,
+                        'beta' : 4.0,
+                        'kappa': 0.01,
+                        'N_CMC': 40}
+        mixinglayer.__init__(self, **kwargs)
+        self.Ntot = self.Np * (2 + self.N_CMC)
+        self.eta = linspace(0, 1, self.N_CMC)
+        self.deta = self.eta[1] - self.eta[0]
+        self.csd = zeros(self.N_CMC - 2)
+        self.cv  = zeros((3, self.N_CMC-2))
+        self.pmf = [PMF(0.5, 0.1, 1, 1, 0, 2) for i in range(self.Np)]
+        self.xis = zeros(self.Ntot)
+        self.xi = reshape(self.xis, (self.N_CMC + 2, -1)) # xi[0] = fmean, xi[1] = im, xi[2] = T(eta=0), xi[3] = T(eta=deta)
+        self.wa = zeros(self.Np * (self.N_CMC + 2)) # work array
+        
+    def init(self, sigma=0.05):
+        mixinglayer.init(self, sigma)
+        # init CMC solution to equilibrium
+        p = self.par
+        a = p['r'] / (p['r'] + 1.)**2 - p['kappa']
+        b = (self.eta / (p['r'] + 1.) - 1. / (p['r'] + 1.) - self.eta * p['r'] / (p['r'] + 1.))
+        c = self.eta - self.eta**2
+        T = (-b - sqrt(b**2 - 4 * a * c)) / 2 / a
+        for i in range(self.Np):
+            self.xi[2:, i] = T[:]
+        
+    def funcT(self, xis, t):
+        """
+        Return right hand side of odes
+        """
+        self.wa = self.wa * 0.
+        yv = reshape(self.wa, (self.N_CMC + 2, -1))
+        xi = reshape(xis, (self.N_CMC + 2, -1))
+        # All equation Neumann at the ends
+        #xi[:, 0] = 4. / 3. * xi[:, 1] - 1. / 3. * xi[:, 2]
+        #xi[:, -1] = 4. / 3. * xi[:, -2] - 1. / 3. * xi[:, -3]
+        xi[:, 0] = xi[:, 1]
+        xi[:, -1] = xi[:, -2]
+        # CMC has homogeneous Dirichlet at ends
+        xi[2, :] = 0
+        xi[-1, :] = 0
+        # Mean and variance
+        yv[0, 1:-1] = (xi[0, 2:] - 2. * xi[0, 1:-1] + xi[0, :-2]) / self.dy**2
+        yv[1, 1:-1] = (xi[1, 2:] - 2. * xi[1, 1:-1] + xi[1, :-2]) / self.dy**2 - self.itau * (xi[1, 1:-1] - xi[0, 1:-1]**2)
+        # CMC
+        yv[3:(self.N_CMC+1), 1:-1] = (xi[3:(self.N_CMC+1), 2:] - 2. * xi[3:(self.N_CMC+1), 1:-1] + xi[3:(self.N_CMC+1), :-2]) / self.dy**2
+
+        for j in range(1, self.Np-1):            
+            dfdy = (xi[0, j+1] - xi[0, j-1]) / self.dy / 2.
+            dmdy = (xi[1, j+1] - xi[1, j-1]) / self.dy / 2.
+            f, im = xi[0:2, j]
+            s = im - f * f
+            if f > 0.01 and f < 0.99:
+                Is = s / f / (1 - f)
+                if Is > 0.01 and Is < 0.99: 
+                    self.pmf[j].set_parameters(f, s)
+                    self.pmf[j].set_fmean_gradient(dfdy, 0, 0)
+                    self.pmf[j].set_sigma_gradient(dmdy, 0, 0)
+                    self.pmf[j].chi = self.itau * s
+                    self.pmf[j].compute(0, True)
+                    #print 'Computing PMF'
+                
+        for j in range(1, self.Np-1):            
+            f, im = xi[0:2, j]
+            s = im - f * f
+            if f > 0.001 and f < 0.999:
+                Is = s / f / (1 - f)
+                if Is > 0.0 and Is < 0.999: 
+                    self.pmf[j].counterflow(self.eta[1:-1], self.csd)
+                    self.pmf[j].CV(self.eta[1:-1], self.cv)
+            else:
+                self.csd[:] = self.itau * s
+                self.cv[0, :] = 0
+            yv[3:-1, j] += self.csd[:] * (xi[4:, j] - 2 * xi[3:-1, j] + xi[2:-2, j]) / self.deta**2
+            #yv[3:-1, j] -= self.cv[0, :] * (xi[4:, j] - xi[2:-2, j]) / 2. / self.deta
+        
+        print t
+        return self.wa
+        
+    def solve(self):
+        """
+        Solve problem
+        """
+        self.z, self.infodict = odeint(self.funcT, self.xis, self.tv, full_output=True)
+        sz = self.z.shape
+        self.z = reshape(self.z, (sz[0], 2 + self.N_CMC, self.Np))
+        self.z[:, :, 0] = 4. / 3. * self.z[:, :, 1] - 1. / 3. * self.z[:, :, 2]
+        self.z[:, :, -1] = 4. / 3. * self.z[:, :, -2] - 1. / 3. * self.z[:, :, -3]
+        self.chi = self.itau * (self.z[:, 1, :] - self.z[:, 0, :]**2)
+
+
 if __name__ == "__main__":
-    sol = mixinglayer(itau=10., L=8., t=2., Nt=100)
+    sol = mixinglayer(itau=10., L=4., t=0.01, Nt=10)
+    #sol = reactive_mixinglayer(t=0.01, itau=10., L=4., Nt=10)
+
     sol.init()
     sol.solve()
     f  = sol.z[:, 0, :]
     im = sol.z[:, 1, :]
     
     s = im - f * f
-    x = s / f / (1-f)    
+    x = s / f / (1 - f)    
+    contourf(x, linspace(0, 1, 20))
+    colorbar()
     
-    pmf = Conditionals(20, 45, sol, _plot=True)
+    pmf = Conditionals(5, 55, sol, _plot=True)
     
     #nt, nz = x.shape
     #tau = zeros((nt, nz))
@@ -193,7 +299,9 @@ if __name__ == "__main__":
                 #tau[i, j] = pmf.tau
                 #dtaudf[i, j] = pmf.dtaudf
                 #dtauds[i, j] = pmf.d2taudsds
-    #contourf(tau)
     #show()
-
+        
+    #pmf = Conditionals(20, 20, sol, lookup="GSL_Lookuptable50.dat")
+    #pmf = Conditionals(20, 20, sol)
+    #show()
     

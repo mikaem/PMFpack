@@ -35,13 +35,13 @@ namespace pmfpack
   {
     F.function = &gslfunction;    
     F.params = parameters;
-//     w = gsl_integration_workspace_alloc (1000);      
-    table = gsl_integration_glfixed_table_alloc(192);   
+    w = gsl_integration_workspace_alloc (1000);      
+    table = gsl_integration_glfixed_table_alloc(96);   
   }
   
   GSLIntegrator::~GSLIntegrator()
   {
-//     gsl_integration_workspace_free(w);
+    gsl_integration_workspace_free(w);
     gsl_integration_glfixed_table_free(table);
   }
   
@@ -56,22 +56,21 @@ namespace pmfpack
     aerr = 5.e-8 / (SQRT2PI);    
     // Limits of the integration
     phi_max = 10;    
-    phi_min = FMAX(((*alfa) + sqrt(1 - (*tau) * (*tau)) * NIM9) / (*tau), -9);
+    phi_min = FMAX(((*alfa) + sqrt(1 - (*tau) * (*tau)) * NIM8) / (*tau), -8);
     phi_X_unity = ((*alfa) + sqrt(1 - (*tau) * (*tau)) * (-NIM16)) / (*tau); // above this X in integrand is > 1-1e-16 and can be set to unity, which makes the integral analytical
 
-    integral = gsl_integration_glfixed (&F, phi_min, phi_max, table);
-//     if (phi_X_unity > phi_max)
-//     {
-//       //status = gsl_integration_qng (&F, phi_min, phi_max, aerr * (phi_max - phi_min) / 2., 0., &integral, &error, &neval) ;
-//       //status = gsl_integration_qag (&F, phi_min, phi_max, aerr * (phi_max - phi_min) / 2., 0., w->limit, 2, w, &integral, &error) ;
-//       integral = gsl_integration_glfixed (&F, phi_min, phi_max, table);
-//     }
-//     else
-//     {
-//       //status = gsl_integration_qng (&F, phi_min, phi_X_unity, aerr * (phi_max - phi_min) / 2., 0., &integral, &error, &neval) ;
-//       integral = gsl_integration_glfixed (&F, phi_min, phi_X_unity, table);
-//       integral += SQRT2PI * (1 - erf(phi_X_unity)); // Analytical
-//     }    
+    if (phi_X_unity > phi_max)
+    {
+      //status = gsl_integration_qng (&F, phi_min, phi_max, aerr * (phi_max - phi_min) / 2., 0., &integral, &error, &neval) ;
+      //status = gsl_integration_qag (&F, phi_min, phi_max, aerr * (phi_max - phi_min) / 2., 0., w->limit, 2, w, &integral, &error) ;
+      integral = gsl_integration_glfixed (&F, phi_min, phi_max, table);
+    }
+    else
+    {
+      //status = gsl_integration_qng (&F, phi_min, phi_X_unity, aerr * (phi_max - phi_min) / 2., 0., &integral, &error, &neval) ;
+      integral = gsl_integration_glfixed (&F, phi_min, phi_X_unity, table);
+      integral += SQRT2PI * (1 - erf(phi_X_unity)); // Analytical
+    }    
     return integral / (*im);
   }
 }
