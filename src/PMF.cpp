@@ -80,19 +80,19 @@ namespace pmfpack
     
     if (fsolver == 0)
     {
-      cout << "GSL fsolver" << endl; 
+      cout << "PMFpack:GSL fsolver" << endl; 
       roots->froot = new GSL_F_Root(integrator);
     }
 #ifdef HAS_BOOST    
     else if (fsolver == 1)
     {
-      cout << "Boost fsolver" << endl; 
+      cout << "PMFpack:Boost fsolver" << endl; 
       roots->froot = new Boost_F_Root(integrator);
     }
 #endif
     else
     {
-      cout << " Not implemented fsolver \n" << endl;
+      cout << "PMFpack:Not implemented fsolver \n" << endl;
     }
   }
   
@@ -102,19 +102,19 @@ namespace pmfpack
     
     if (fdfsolver == 0)
     {
-      cout << "GSL fdfsolver" << endl;
+      cout << "PMFpack:GSL fdfsolver" << endl;
       roots->fdfroot = new GSL_FDF_Root(integrator);
     }
 #ifdef HAS_BOOST
     else if (fdfsolver == 1)
     {
-      cout << "Boost fdfsolver" << endl; 
+      cout << "PMFpack:Boost fdfsolver" << endl; 
       roots->fdfroot = new Boost_FDF_Root(integrator);
     }
 #endif
     else
     {
-      cout << " Not implemented fdfsolver \n" << endl;
+      cout << "PMFpack:Not implemented fdfsolver \n" << endl;
     }
   }
   
@@ -124,12 +124,12 @@ namespace pmfpack
     
     if (integral == 0)
     {
-      cout << "GSL integrator" << endl; 
+      cout << "PMFpack:GSL integrator" << endl; 
       integrator = new GSLIntegrator(parameters);
     }
     else
     {
-      cout << " Not implemented integrator \n" << endl;
+      cout << "PMFpack:Not implemented integrator \n" << endl;
     }
   }
   
@@ -139,22 +139,22 @@ namespace pmfpack
     
     if (deriv == 0)
     {
-      cout << "Finite difference derivator" << endl; 
+      cout << "PMFpack:Finite difference derivator" << endl; 
       derivator = new FDDerivator(roots);
     }
     else if (deriv == 1)
     {
-      cout << "Chebyshev derivator" << endl; 
+      cout << "PMFpack:Chebyshev derivator" << endl; 
       derivator = new ChebDerivator(roots, cheb_order);
     }
     else if (deriv == 2)
     {
-      cout << "Adaptive Chebyshev derivator" << endl; 
+      cout << "PMFpack:Adaptive Chebyshev derivator" << endl; 
       derivator = new AdaptiveChebDerivator(roots, 16); // Maximum order 16
     }
     else
     {
-      cout << " Not implemented derivator \n" << endl;
+      cout << "PMFpack:Not implemented derivator \n" << endl;
     }
   }
   
@@ -167,11 +167,11 @@ namespace pmfpack
     im = s + f * f;
     if(f <= 0. || f >= 1.)
     {
-      cout << "Wrong input. 0 < fmean = (" << f << ") < 1" << endl;
+      cout << "PMFpack:Wrong input. 0 < fmean = (" << f << ") < 1" << endl;
     }
     else if(s <= 0. || s / f / (1 - f) >= 1.)
     {
-      cout << "Wrong input. 0 < Intensity of segregation (" << s / f / (1-f) << ") < 1" << endl;
+      cout << "PMFpack:Wrong input. 0 < Intensity of segregation (" << s / f / (1-f) << ") < 1" << endl;
     }
   }
   
@@ -662,19 +662,17 @@ namespace pmfpack
     //   II(eta) = eta * erf(phi / sqrt(1. - 2. * tau)) - \int_{-\infty}^{phi} X(phi') * r(phi') dphi' 
     //
     // where erf as before really is the normal distribution (see PMFMath.cpp) 
-    gsl_integration_workspace *w = gsl_integration_workspace_alloc (100);      
     gsl_integration_glfixed_table *table = gsl_integration_glfixed_table_alloc(96);
     gsl_function F;
     
     F.function = &xr;
     F.params = parameters;
     double phi = alfa + sqrt(2. * tau) * erfinv(eta);
-    double f1 = eta * erf(phi / sqrt(1. - 2. * tau));
+    double integral = eta * erf(phi / sqrt(1. - 2. * tau));
     double phi_min = alfa - 12. * sqrt(2. * tau);
-    double integral = gsl_integration_glfixed (&F, phi_min, phi, table);
-    gsl_integration_workspace_free(w);
+    integral -= gsl_integration_glfixed (&F, phi_min, phi, table);
     gsl_integration_glfixed_table_free(table);
-    return f1 - integral;
+    return integral;
   }
   
   void PMF::II(double *eta, int N1, double *x, int N2)

@@ -44,12 +44,33 @@ w2 = integrate.workspace(10000)
 #pmf.chi = 50 * sigma
 
 
-fmean = 0.030099557480701523
-sigma = 0.028047541238054665
+#fmean = 0.030099557480701523
+#sigma = 0.028047541238054665
+#pmf = PMF(fmean, sigma, 1,1,0,2)
+#pmf.set_fmean_gradient(-0.65591166598880513, 0, 0)
+#pmf.set_sigma_gradient(-0.63360534149885717, 0, 0)
+#pmf.chi = 10 * sigma
+
+#fmean = 0.4676064018716144
+#sigma = 0.0005159628035451003
+#pmf = PMF(fmean, sigma, 1,1,0,2)
+#pmf.set_fmean_gradient(-0.16057830099510464, 0, 0)
+#pmf.set_sigma_gradient(-0.15030942474080661, 0, 0)
+#pmf.chi = 100 * sigma
+
+fmean = 0.4198312143488187
+sigma = 0.24220804267729817
 pmf = PMF(fmean, sigma, 1,1,0,2)
-pmf.set_fmean_gradient(-0.65591166598880513, 0, 0)
-pmf.set_sigma_gradient(-0.63360534149885717, 0, 0)
-pmf.chi = 10 * sigma
+pmf.set_fmean_gradient(-3.195450861125003, 0.4520433904623947, 0)
+pmf.set_sigma_gradient(-3.1948201253111304, 0.43482612821767846, 0)
+pmf.chi = 0.16733414723380968 * sigma
+
+#fmean = 0.316324693352
+#sigma = 0.00160280579202
+#pmf = PMF(fmean, sigma, 1,1,0,2)
+#pmf.set_fmean_gradient(-0.072188419669, 0, 0)
+#pmf.set_sigma_gradient(-0.0486457589353, 0, 0)
+#pmf.chi = 10. * sigma
 
 pmf.DT = 1.         # Turbulent diffusivity
 
@@ -375,7 +396,7 @@ tests = ['dpdfdtau', 'dpdfdalfa',
 x = 0.5
 print "{0:>22s}{1:>14s}{2:>14s}".format("Error", "Exact", "Numeric")
 for test in tests:
-    exec('a = {0}(x, pmf); b = {1}_numeric(x, pmf, dh=1e-7)'.format(test, test))
+    exec('a = {0}(x, pmf); b = {1}_numeric(x, pmf, dh=1e-6)'.format(test, test))
     print '{0:12s} {1:6.6e} {2:+6.6e} {3:+6.6e}'.format(test, abs(a-b), a, b)
 print "PMFpack: {0:12s} {1}".format("CSD", pmf.CSD(x))
 print "PMFpack: {0:12s} {1}".format("CSD_verify", pmf.CSD_verify(x))
