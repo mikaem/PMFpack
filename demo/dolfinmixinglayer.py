@@ -92,13 +92,18 @@ the presume mapping function (PMF) approach, provided by the PMFpack
 module.
 """
 from PMFpack import *
-from dolfin import *
-#from cbc.pdesys import *
+#from dolfin import *
+from cbc.pdesys import *
 from numpy import array, isnan, sqrt, linspace, sign, cos, zeros, maximum, minimum
 from pylab import find
 from scipy.special import erf
 from scipy.optimize import fsolve
 from time import time
+
+parameters['reorder_dofs_serial'] = False
+parameters["form_compiler"]["optimize"]     = True
+parameters["form_compiler"]["cpp_optimize"] = True
+parameters["form_compiler"]["representation"] = "quadrature"
 
 # Solve unconditional models for flim < fmean < 1 - flim
 # Assume equilibrium otherwise
@@ -110,7 +115,7 @@ pmf = PMF(0.5, 0.1, 0, 0, 0, 0)
 # Reaction rate constants
 r = Constant(3)
 kappa = Constant(0.01)
-A = Constant(1.0e7)
+A = Constant(2.0e6)
 alfa = Constant(0.87)
 Ze = Constant(4.)
 
@@ -121,7 +126,7 @@ class ReactionModel:
     explicit spatial dependency for <T|eta>."""
     def __init__(self, eta):
         self.eta = eta
-        self.mesh = Interval(100, 0, 1)
+        self.mesh = IntervalMesh(100, 0, 1)
         V = FunctionSpace(self.mesh, 'CG', 1)
         u = TrialFunction(V)
         v = TestFunction(V)
@@ -266,8 +271,8 @@ class Finit(Expression):
     def value_shape(self):
         return (2,)
         
-def mixinglayermesh(L=2, H=8, Nx=40, Ny=40):
-    mesh = Rectangle(-L, 0, L, H, Nx, Ny)
+def mixinglayermesh(L=3, H=12, Nx=40, Ny=40):
+    mesh = RectangleMesh(-L, 0, L, H, Nx, Ny)
     x = mesh.coordinates()
     x[:, 0] = sign(x[:, 0]) * (1. - cos(pi * x[:, 0] / L / 2.)) * L
     return mesh
@@ -306,7 +311,7 @@ solve(F0 == 0, fm_, [bc], J=J0)
 
 # CMC equations are solved on top of the scalar moments
 # Divide eta space into Nc-1 intervals
-Nc = 10
+Nc = 30
 CMCmesh = mixinglayermesh(Nx=10, Ny=10)
 eta = linspace(0, 1, Nc)
 dd = Constant((1. / (Nc - 1))**2)
@@ -324,7 +329,7 @@ qeq = interpolate(Tinit(eta, fm=fm_, model=0, itau=itau, element=VQ.ufl_element(
 qfl = interpolate(Tinit(eta, fm=fm_, model=1, itau=itau, element=VQ.ufl_element()), VQ)
 
 # CMC solution Function q_
-q_ = qfl.copy(True)
+q_ = qeq.copy(True)
 
 # Dirichlet boundary condition on inlet
 bcmc = DirichletBC(VQ, qeq, "on_boundary && x[1] < 10 * DOLFIN_EPS")
@@ -363,9 +368,9 @@ for i in range(Nc-2):
 J1 = derivative(CMC, q_, q)   
 
 # Solve CMC equation using Newton iterations
-solve(CMC == 0, q_, [bcmc], J=J1)
-#cmcsolver = PDESubSystem(vars(), ['q'], bcs=[bcmc], F=CMC, iteration_type='Newton')
-#cmcsolver.solve(max_iter=5)
+#solve(CMC == 0, q_, [bcmc], J=J1)
+cmcsolver = PDESubSystem(vars(), ['q'], bcs=[bcmc], F=CMC, iteration_type='Newton')
+cmcsolver.solve(max_iter=20)
 
 # Compute unconditional average temperature by summing pdf(eta) * Q(eta)
 # This should be integrated much more accurately using the exact pdf and

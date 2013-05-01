@@ -34,7 +34,9 @@ if (NOT PMF_ENABLE_BOOST)
   list(REMOVE_ITEM SOURCES ${Boost_SOURCES})  
 endif()
 
+
 list(APPEND PMF_CXX_DEFINITIONS "-fPIC -O3")
+
 if (PMF_ENABLE_BOOST)
   list(APPEND PMF_CXX_DEFINITIONS "-DHAS_BOOST")
   if (CMAKE_BUILD_TYPE STREQUAL "Developer" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,6 +44,7 @@ if (PMF_ENABLE_BOOST)
     list(APPEND PMF_CXX_DEFINITIONS "-DBOOST_MATH_INSTRUMENT")
   endif()
 endif()
+
 
 # Dependency
 Find_package(GSL)
@@ -54,4 +57,9 @@ install(TARGETS PMF DESTINATION lib)
 
 add_subdirectory(demo)
 
+add_subdirectory(fortran)
+
+add_subdirectory(demofortran)
+
 add_subdirectory(swig)
+

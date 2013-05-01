@@ -51,14 +51,14 @@ namespace pmfpack
 
   double gsl_erf(double z)
   {
-    return 0.5 * (1 + gsl_sf_erf(z / M_SQRT2));
+    return 0.5 * (1 + gsl_sf_erf(z / SQRT2));
   }
 
   #ifdef HAS_BOOST
   // Boost use the erf_ definition and as such we need to wrap these up
   double boost_erf(double z)
   {
-    return 0.5 * (1 + boost::math::erf(z / M_SQRT2));
+    return 0.5 * (1 + boost::math::erf(z / SQRT2));
   }
 
   boost::math::normal s;

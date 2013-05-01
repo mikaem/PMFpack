@@ -20,6 +20,7 @@
 // Last changed: 2012-06-01
 
 #include "AdaptiveChebDerivator.h"
+#include <assert.h>
 
 namespace pmfpack
 {

@@ -24,6 +24,8 @@
 
 #include "Integrator.h"
 #include "GSLIntegrator.h"
+#include <iostream>
+#include <iomanip>
 
 namespace pmfpack
 {

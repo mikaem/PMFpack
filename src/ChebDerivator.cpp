@@ -20,6 +20,7 @@
 // Last changed: 2012-05-14
 
 #include "ChebDerivator.h"
+#include <iostream>
 
 namespace pmfpack
 {

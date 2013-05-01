@@ -28,6 +28,7 @@
 #endif
 #include "gsl/gsl_cdf.h"
 #include "gsl/gsl_sf_erf.h"
+#include<cmath>        
         
 namespace pmfpack
 {

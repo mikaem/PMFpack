@@ -95,8 +95,8 @@ namespace pmfpack
       return -1;
     }
     if(verbose == 1){
-      std::cout << "Root using " << gsl_root_fdfsolver_name(s) << " method" << std::endl;
-      std::cout << "Iter      root         error             f  " << std::endl;
+      cout << "Root using " << gsl_root_fdfsolver_name(s) << " method" << endl;
+      cout << "Iter      root         error             f  " << endl;
     }
     do  
     {
@@ -117,9 +117,9 @@ namespace pmfpack
         status = GSL_SUCCESS;
       
       if (verbose == 1){
-        std::cout << setprecision(6) << std::setw(4) << iter << std::setw(14) << 0.5*(1.-x*x) << std::setw(14) << x-x0 << std::setw(14) << (*f) << std::endl;
+        cout << std::setprecision(6) << std::setw(4) << iter << std::setw(14) << 0.5*(1.-x*x) << std::setw(14) << x-x0 << std::setw(14) << (*f) << endl;
       if (status == GSL_SUCCESS)
-        std::cout << "Converged, root = " << 0.5 * (1. - x * x) << std::endl;
+        cout << "Converged, root = " << 0.5 * (1. - x * x) << endl;
       }
     }
     while (status == GSL_CONTINUE && iter < max_iteration && x > 0. && x < xhi);
