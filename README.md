@@ -1,0 +1,4 @@
+pmfpack
+=======
+
+PMFpack is a C++ implementation of the presumed mapping function approach as a model for turbulent mixing. The implemented models are described in M. Mortensen and B. Andersson, 'Presumed mapping functions for Eulerian modeling of turbulent mixing', Flow turbulence and combustion, vol 76, number 2, 199-219, (2006) . The package provides a complete set of fully consistent sub models required, e.g., for a fully consistent implementation of the Conditional Moment Closure of Bilger and Klimenko. More exactly the package provides the probability density function (PDF), the consistent conditional scalar dissipation rate found by direct integration of the exact PDF-equation (Mortensen, Phys. Fluids 17(1):018106, 2005) and the conditional mean velocity based on the gradient diffusion model of Pope. PMFpack also has a python interface. There is also a new Fortran interface that is currently under development.
