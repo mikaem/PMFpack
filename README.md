@@ -48,14 +48,12 @@ Authors
 
 PMFpack is developed and maintained by yours truly
 
-Associate Prof. Mikael Mortensen \\
-Department of Mathematics \\
-Division of Mechanics \\
-University of Oslo \\
-Norway \\
- \\
-and  \\
- \\
+Associate Prof. Mikael Mortensen 
+Department of Mathematics 
+Division of Mechanics 
+University of Oslo 
+Norway 
+ 
+and  
+ 
 Dr. Ahmad El Sayed
-
-
