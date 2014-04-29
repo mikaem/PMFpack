@@ -92,18 +92,19 @@ the presume mapping function (PMF) approach, provided by the PMFpack
 module.
 """
 from PMFpack import *
-#from dolfin import *
-from cbc.pdesys import *
+from dolfin import *
+#from cbc.pdesys import *
 from numpy import array, isnan, sqrt, linspace, sign, cos, zeros, maximum, minimum
 from pylab import find
 from scipy.special import erf
 from scipy.optimize import fsolve
 from time import time
+from fenicstools import interpolate_nonmatching_mesh
 
-parameters['reorder_dofs_serial'] = False
 parameters["form_compiler"]["optimize"]     = True
 parameters["form_compiler"]["cpp_optimize"] = True
 parameters["form_compiler"]["representation"] = "quadrature"
+parameters['allow_extrapolation'] = True
 
 # Solve unconditional models for flim < fmean < 1 - flim
 # Assume equilibrium otherwise
@@ -115,7 +116,7 @@ pmf = PMF(0.5, 0.1, 0, 0, 0, 0)
 # Reaction rate constants
 r = Constant(3)
 kappa = Constant(0.01)
-A = Constant(2.0e6)
+A = Constant(4.0e6)
 alfa = Constant(0.87)
 Ze = Constant(4.)
 
@@ -126,7 +127,7 @@ class ReactionModel:
     explicit spatial dependency for <T|eta>."""
     def __init__(self, eta):
         self.eta = eta
-        self.mesh = IntervalMesh(100, 0, 1)
+        self.mesh = IntervalMesh(mpi_comm_self(), 100, 0, 1)
         V = FunctionSpace(self.mesh, 'CG', 1)
         u = TrialFunction(V)
         v = TestFunction(V)
@@ -165,8 +166,25 @@ class ReactionModel:
             pmf.counterflow(self.y_valid, self.cx)
             self.csd_array[self.eta_valid_index] = self.cx[:]
             self.csd.vector().set_local(self.csd_array)
-            solve(self.F == 0, self.u_, [self.bc], J=self.J, solver_parameters={"newton_solver":{'report': False}})
-            
+            try:
+                solve(self.F == 0, self.u_, [self.bc], J=self.J, 
+                      solver_parameters={"newton_solver": {"linear_solver": "mumps",
+                                                           "report": True,
+                                                           "maximum_iterations": 50,
+                                                           "relaxation_parameter": 1.0,
+                                                           "error_on_nonconvergence": True}})
+                    
+                #solve(self.F == 0, self.u_, [self.bc], J=self.J, 
+                    #solver_parameters={"nonlinear_solver": "snes",
+                                            #"snes_solver": {"linear_solver": "mumps",
+                                                            #"report": True,
+                                                            #"maximum_iterations": 50,
+                                                            #"error_on_nonconvergence": False}})
+            except RuntimeError:
+                print "Flamelet solution not found for "
+                print MPI.rank(mpi_comm_world()), fmean, sigma, iseg
+                self.u_.vector()[:] = 0.
+                
     def EQ(self):
         """Equilibrium solution."""
         def rx(x, eta):
@@ -196,24 +214,16 @@ class Tinit(Expression):
         self.model = model
         self.fm = fm
         self.itau = itau
-        self.computed_sol = {} # This is used to hold the solution in the nodes to avoid costly recomputations
         
     def eval(self, values, x):
-        tx = tuple(x)
-        if tx in self.computed_sol:
-            sol = self.computed_sol[tx]
-        else:    
-            if self.model == 0:
-                self.rx.EQ()                
-            elif self.model == 1:
-                f, im = self.fm(x)
-                s = im - f * f
-                chi = s * self.itau(x)
-                self.rx.flamelet(f, s, chi)
-            sol = array([self.rx.u_(xx) for xx in self.rx.eta[1:-1]])
-            self.computed_sol[tx] = sol
-            
-        values[:] = sol[:]
+        if self.model == 0:
+            self.rx.EQ()                
+        elif self.model == 1:
+            f, im = self.fm(x)
+            s = im - f * f
+            chi = s * self.itau(x)
+            self.rx.flamelet(f, s, chi)
+        values[:] = array([self.rx.u_(xx) for xx in self.rx.eta[1:-1]])
                     
 class Conditionals(Expression):
     """Compute CSD and conditional velocity in x- and y-direction.
@@ -225,35 +235,29 @@ class Conditionals(Expression):
         self.itau = itau
         self.csd = zeros(Nc)     # Conditional scalar dissipation rate
         self.cv = zeros((3, Nc)) # Conditional velocity
-        self.computed_sol = {}
     
     def eval(self, values, x):
-        tx = tuple(x)
         N = len(self.csd)
         self.csd[:] = 0
         self.cv[:] = 0
-        if tx in self.computed_sol:
-            self.csd[:], self.cv[:] = self.computed_sol[tx]
-        else:
-            f, im = self.fm(x)
-            f = max(min(1., f), 0.)
-            s = max(0., min(im - f * f, f * (1. - f)))
-            chi = self.itau(x) * s
-            if f > flim and f < (1 - flim):
-                seg = s / f / (1 - f)
-                if seg > flim and seg < (1 - flim):
-                    pmf.set_parameters(f, s)
-                    pmf.set_fmean_gradient(*self.grad_f(x))
-                    pmf.set_sigma_gradient(*self.grad_im(x))
-                    pmf.chi = chi
-                    pmf.compute(0, True)
-                    pmf.CV(eta[1:-1], self.cv)
-                    if seg > 0.95:
-                        pmf.counterflow(eta[1:-1], self.csd)
-                    else:
-                        pmf.counterflow(eta[1:-1], self.csd)
-                        #pmf.CSD(eta[1:-1], self.csd)
-            self.computed_sol[tx] = self.csd.copy(), self.cv.copy()
+        f, im = self.fm(x)
+        f = max(min(1., f), 0.)
+        s = max(0., min(im - f * f, f * (1. - f)))
+        chi = self.itau(x) * s
+        if f > flim and f < (1 - flim):
+            seg = s / f / (1 - f)
+            if seg > flim and seg < (1 - flim):
+                pmf.set_parameters(f, s)
+                pmf.set_fmean_gradient(*self.grad_f(x))
+                pmf.set_sigma_gradient(*self.grad_im(x))
+                pmf.chi = chi
+                pmf.compute(0, True)
+                pmf.CV(eta[1:-1], self.cv)
+                if seg > 0.995:
+                    pmf.counterflow(eta[1:-1], self.csd)
+                else:
+                    #pmf.counterflow(eta[1:-1], self.csd)
+                    pmf.CSD(eta[1:-1], self.csd)
             
         values[:N] = self.csd[:]
         values[N:2*N] = self.cv[0, :]
@@ -283,7 +287,7 @@ V = FunctionSpace(mesh, 'CG', 1)
 FM = MixedFunctionSpace([V, V])  # fmean, variance
 fm = TrialFunction(FM)
 fm_v = TestFunction(FM)
-f0 = interpolate(Finit(), FM)
+f0 = interpolate_nonmatching_mesh(Finit(), FM)
 fm_ = f0.copy(True)
 x = Vector(f0.vector())
 
@@ -295,7 +299,7 @@ U0 = Constant((0., 10.))
 
 # Normalized mixing frequency (Need this to be zero at x[1] = 0 to be consistent with eq-solution. If flamelet solution is used as Dirichlet on inlet it can be nonzero.)
 #itau = Constant(10.)
-itau_e = Expression("10. * (1. - exp(-5. * x[1] * x[1] * x[1]))")
+itau_e = Expression("1. * (1. - exp(-5. * x[1] * x[1] * x[1]))")
 itau = interpolate(itau_e, V)
 
 # Variational form for first two integer moments of mixture fraction
@@ -305,7 +309,7 @@ F0 = inner(grad(fm_) * U0, fm_v)*dx + inner(grad(fm_), grad(fm_v))*dx + itau * i
 J0 = derivative(F0, fm_, fm)
 
 # Solve using Newton iterations
-solve(F0 == 0, fm_, [bc], J=J0)
+solve(F0 == 0, fm_, [bc], J=J0, solver_parameters={"newton_solver":{"linear_solver": "mumps"}})
 #scalar = PDESubSystem(vars(), ['fm'], bcs=[bc], F=F0, iteration_type='Newton')
 #scalar.solve(max_iter=5)
 
@@ -316,30 +320,35 @@ CMCmesh = mixinglayermesh(Nx=10, Ny=10)
 eta = linspace(0, 1, Nc)
 dd = Constant((1. / (Nc - 1))**2)
 Q = FunctionSpace(CMCmesh, 'CG', 1)
-VQ = MixedFunctionSpace([Q,] * (Nc-2)) # Q(eta=1/Nc), Q(eta=2/Nc), ..., Q(eta=1-1/Nc)
+VQ = MixedFunctionSpace([Q,] * (Nc-2))  # Q(eta=1/Nc), Q(eta=2/Nc), ..., Q(eta=1-1/Nc)
 #DQ = FunctionSpace(mesh, 'DG', 0)      # Alternatively one could use DQ for conditinal models
 #DVQ = MixedFunctionSpace([DQ,] * (Nc-2))
 q = TrialFunction(VQ)
 q_v = TestFunction(VQ)
 
 # Equilibrium solution
-qeq = interpolate(Tinit(eta, fm=fm_, model=0, itau=itau, element=VQ.ufl_element()), VQ)
+qeq = interpolate_nonmatching_mesh(Tinit(eta, fm=fm_, model=0, itau=itau, element=VQ.ufl_element()), VQ)
+qeq.update()
 
 # Flamelet solution
-qfl = interpolate(Tinit(eta, fm=fm_, model=1, itau=itau, element=VQ.ufl_element()), VQ)
+qfl = interpolate_nonmatching_mesh(Tinit(eta, fm=fm_, model=1, itau=itau, element=VQ.ufl_element()), VQ)
+qfl.update()
 
 # CMC solution Function q_
-q_ = qeq.copy(True)
+q_ = qfl.copy(True)
 
 # Dirichlet boundary condition on inlet
 bcmc = DirichletBC(VQ, qeq, "on_boundary && x[1] < 10 * DOLFIN_EPS")
 
 # Compute conditional models
-grad_f = project(grad(fm_[0]), Q * Q)
-grad_im = project(grad(fm_[1]), Q * Q)
+grad_f = project(grad(fm_[0]), V * V)
+grad_im = project(grad(fm_[1]), V * V)
 VVQ = MixedFunctionSpace([VQ, VQ, VQ]) # CSD + cond. velocity x and y direction
 conditionals = Conditionals(len(eta)-2, fm=fm_, grad_f=grad_f, grad_im=grad_im, itau=itau, element=VVQ.ufl_element())
-cmixed = interpolate(conditionals, VVQ)
+t0 = time()
+cmixed = interpolate_nonmatching_mesh(conditionals, VVQ)
+print "Time ", time()-t0
+cmixed.update()
 CSD, cvx, cvy = cmixed.split()
 
 print "Computed conditionals "
@@ -368,37 +377,86 @@ for i in range(Nc-2):
 J1 = derivative(CMC, q_, q)   
 
 # Solve CMC equation using Newton iterations
-#solve(CMC == 0, q_, [bcmc], J=J1)
-cmcsolver = PDESubSystem(vars(), ['q'], bcs=[bcmc], F=CMC, iteration_type='Newton')
-cmcsolver.solve(max_iter=20)
+solve(CMC == 0, q_, [bcmc], J=J1, solver_parameters={"newton_solver":{"linear_solver": "mumps",
+                                                                      "error_on_nonconvergence": False,
+                                                                      "maximum_iterations": 25,
+                                                                      "relaxation_parameter": 0.8}})
+
+#cmcsolver = PDESubSystem(vars(), ['q'], bcs=[bcmc], F=CMC, iteration_type='Newton')
+#cmcsolver.solve(max_iter=20)
+q_.update()
 
 # Compute unconditional average temperature by summing pdf(eta) * Q(eta)
 # This should be integrated much more accurately using the exact pdf and
 # (linear) interpolation of the conditional temperature
 VV = MixedFunctionSpace([V,] * (Nc - 2))
 pdf = Function(VV)
-fa = fm_.vector().array()
+f_, m_ = fm_.split(True)
 N = V.dim()
-fa[:N] = maximum(minimum(fa[:N], 1.), 0.)
-sa = maximum(0, minimum(fa[N:] - fa[:N] * fa[:N], fa[:N] * (1. - fa[:N])))
 T = Function(V)   # CMC unconditional temperature
 Tfl = Function(V) # Flamelet unconditional temperature
-qq = interpolate(q_, VV)   # Interpolate CMC solution on mixture fraction mesh
-qf = interpolate(qfl, VV)  # Interpolate flamelet solution on mixture fraction mesh
+qq = interpolate_nonmatching_mesh(q_, VV)   # Interpolate CMC solution on mixture fraction mesh
+qq.update()
+qf = interpolate_nonmatching_mesh(qfl, VV)  # Interpolate flamelet solution on mixture fraction mesh
+qf.update()
 pdf_ = zeros(Nc - 2)
-for i in range(V.dim()):
-    f = fa[i]
+dofmap = V.dofmap()
+owner_range = dofmap.ownership_range()
+print owner_range, f_.vector().local_size(), f_.vector().local_range()
+
+Ta = T.vector().array()
+Tfla = Tfl.vector().array()
+pdfa = pdf.vector().array()
+for i in range(f_.vector().local_size()):    
+    i_global = i+owner_range[0]
+    f = f_.vector()[i_global]
     if f > flim and f < (1 - flim):
-        s = sa[i]
+        m = m_.vector()[i_global]
+        s = max(0, min(m-f*f, f*(1-f)))
         seg = s / f / (1 - f)
         if seg > flim and seg < (1 - flim):
             pmf.set_parameters(f, s)
             pmf.compute(0, False)
             pmf.PDF(eta[1:-1], pdf_)
             for j in range(Nc-2):
-                pdf.vector()[j * V.dim() + i] = pdf_[j]
-                T  .vector()[i] += pdf_[j] * qq.vector()[j * V.dim() + i] * eta[1]
-                Tfl.vector()[i] += pdf_[j] * qf.vector()[j * V.dim() + i] * eta[1]
+                q_dofs = VV.sub(j).dofmap().dofs()
+                Ta[i] += pdf_[j] * qq.vector()[q_dofs[i]] * eta[1]
+                Tfla[i] += pdf_[j] * qf.vector()[q_dofs[i]] * eta[1]
+T.vector().set_local(Ta)
+Tfl.vector().set_local(Tfla)
+
+#pdf = Function(V)
+#fa = fm_.vector().array()
+#N = V.dim()
+#dofmap_fa = FM.sub(0).dofmap().collapse(mesh)[1].values()
+#dofmap_sa = FM.sub(1).dofmap().collapse(mesh)[1].values()
+#fa[dofmap_fa] = maximum(minimum(fa[dofmap_fa], 1.), 0.)
+#sa = maximum(0, minimum(fa[dofmap_sa] - fa[dofmap_sa] * fa[dofmap_sa], fa[dofmap_sa] * (1. - fa[dofmap_sa])))
+#T = Function(V)   # CMC unconditional temperature
+#Tfl = Function(V) # Flamelet unconditional temperature
+#qq = Function(V)   # Interpolate CMC solution on mixture fraction mesh
+#qf = Function(V)  # Interpolate flamelet solution on mixture fraction mesh
+#pdf_ = zeros(Nc - 2)
+#for sub in range(Nc-2):
+    #qq = interpolate(q_.sub(sub), V)   # Interpolate CMC solution on denser mixture fraction mesh
+    #qq.update()
+    #qf = interpolate(qfl.sub(sub), V)  # Interpolate flamelet solution on denser mixture fraction mesh
+    #qf.update()    
+    #for i in range(V.dim()):
+        #f = fa[i]
+        #if f > flim and f < (1 - flim):
+            #s = sa[i]
+            #seg = s / f / (1 - f)
+            #if seg > flim and seg < (1 - flim):
+                #pmf.set_parameters(f, s)
+                #pmf.compute(0, False)
+                #pmf.PDF(eta[1:-1], pdf_)
+                #for j in range(Nc-2):
+                    #pdf.vector()[j * V.dim() + i] = pdf_[j]
+                    #T  .vector()[i] += pdf_[j] * qq.vector()[j * V.dim() + i] * eta[1]
+                    #Tfl.vector()[i] += pdf_[j] * qf.vector()[j * V.dim() + i] * eta[1]
 
 plot(T, title="CMC Temperature")
 plot(Tfl, title="Flamelet Temperature")
+plot(T-Tfl, title="difference")
+interactive()
