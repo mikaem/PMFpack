@@ -172,7 +172,7 @@ namespace pmfpack
     
     dh = gsl_min((*fmean), 1 - (*fmean));  //   0 < f < 1
     dh = gsl_min(dh, gsl_min((*sigma), (*fmean) * (1 - (*fmean)) - (*sigma)));            //   0 < sigma < f * (1 - f)
-    dh = gsl_min(dh / 10., 1e-7);
+    dh = gsl_min(dh / 10., 1e-6);
     dh = pow(2, (int) log2(dh));
     
     // Compute central tau first using a robust bracketing algorithm

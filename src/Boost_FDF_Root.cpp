@@ -94,6 +94,7 @@ namespace pmfpack{
     {
       (*fmean) = 1. - (*fmean);
       (*im) = (*fmean) * (*fmean) + (*sigma);
+      (*alfa) = erfinv(1 - (*fmean));
     }
     return (*tau);
   }

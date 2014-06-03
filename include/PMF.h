@@ -41,6 +41,7 @@
 #include "AdaptiveChebDerivator.h"
 #include "Lookup.h"
 #include "GSLLookup.h"
+#include "HDF5Lookup.h"
 
 namespace pmfpack
 {

@@ -47,8 +47,6 @@ namespace pmfpack
     
     double *fm, *Is;
     
-    bool central;
-    
     uint grid_type;
     
     void uniformgrid(double, double);
@@ -70,6 +68,8 @@ namespace pmfpack
     virtual int read_table(char*) = 0;
     
     virtual void generate_table(int, int, char*) = 0;
+    
+    virtual double ** get_table(int) = 0;
     
   };
 

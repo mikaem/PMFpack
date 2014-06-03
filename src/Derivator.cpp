@@ -63,7 +63,7 @@ namespace pmfpack
     alfa0 = (*p[2]);
     tau0 = (*p[3]);
     im0 = (*p[4]);
-        
+    
     // Modify parameters
     (*p[0]) = (*p[0]) + df;
     (*p[4]) = *roots->central ? (*p[0]) * (*p[0]) + (*p[1]) : (*p[4]);

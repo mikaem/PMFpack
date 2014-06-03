@@ -35,8 +35,8 @@ namespace pmfpack
   {
     double alfa = (*data[2]);
     double tau = (*data[3]); 
-    double X = erf((tau * phi - alfa) / sqrt(1 - tau * tau));
-    return X * X * exp(- phi * phi / 2);
+    double X = erf((tau * phi - alfa) / sqrt((1 - tau) * (1 + tau)));
+    return X * X * exp(- phi * phi / 2); // / (*data[4]);
   }
   
 }

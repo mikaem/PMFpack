@@ -12,6 +12,10 @@ ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # Enable Boost?
 set(PMF_ENABLE_BOOST ${PMF_ENABLE_BOOST} CACHE BOOL "FALSE")
 
+find_package(Boost COMPONENTS system filesystem timer REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIR})
+
 #------------------------------------------------------------------------------
 # Install header files
 file(GLOB _HEADERS ${PMF_INCLUDE_DIR}/*.h)
@@ -22,7 +26,7 @@ if (NOT PMF_ENABLE_BOOST)
 endif()
 install(FILES ${HEADERS} DESTINATION include COMPONENT Development)
 include_directories(${PMF_INCLUDE_DIR})
-
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/multiprecision")
 #------------------------------------------------------------------------------
 # Find sources
 file(GLOB CPP_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -34,8 +38,7 @@ if (NOT PMF_ENABLE_BOOST)
   list(REMOVE_ITEM SOURCES ${Boost_SOURCES})  
 endif()
 
-
-list(APPEND PMF_CXX_DEFINITIONS "-fPIC -O3")
+list(APPEND PMF_CXX_DEFINITIONS "-fPIC -O1 -std=c++11 -Wno-narrowing")
 
 if (PMF_ENABLE_BOOST)
   list(APPEND PMF_CXX_DEFINITIONS "-DHAS_BOOST")
@@ -53,6 +56,12 @@ include_directories(${GSL_INCLUDE_DIRS})
 add_library(PMF ${HEADERS} ${SOURCES})
 string(STRIP GSL_LIBRARIES "${GSL_LIBRARIES}")
 target_link_libraries(PMF ${GSL_LIBRARIES})
+
+#FIND_PACKAGE (HDF5 NAMES hdf5)
+FIND_PACKAGE (HDF5 HINTS ${HDF5_DIR}) # Find non-cmake built HDF5
+INCLUDE_DIRECTORIES (${HDF5_INCLUDE_DIR})
+target_link_libraries( PMF ${LINK_LIBS} ${HDF5_LIBRARIES} z ${Boost_LIBRARIES})
+
 install(TARGETS PMF DESTINATION lib)
 
 add_subdirectory(demo)

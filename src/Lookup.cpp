@@ -79,9 +79,9 @@ namespace pmfpack
     double dy, dx;
     
     dy = 2. * M_PI / (Ns + 1.);
-    arange(fm, -M_PI + dy, dy, Ns);
+    arange(fm, -M_PI + dy, dy, Nf);
     dx = 2. * M_PI / (Nf + 1.);
-    arange(Is, -M_PI + dx, dx, Nf);
+    arange(Is, -M_PI + dx, dx, Ns);
         
     for(int i = 0; i < Ns; i++)
       Is[i] = Is[i] * ymax;

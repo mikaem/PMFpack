@@ -19,24 +19,32 @@
 // First added:  2012-05-23
 // Last changed: 2012-05-23
 
-#ifndef __GSLLOOKUP_H
-#define __GSLLOOKUP_H
+#ifndef __HDF5LOOKUP_H
+#define __HDF5LOOKUP_H
 
 #include "Lookup.h"
 #include "gsl/gsl_interp.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <boost/multiprecision/cpp_dec_float.hpp>
+#include "pmf_multiprecision.hpp"
+
+using boost::multiprecision::number;
+using boost::multiprecision::cpp_dec_float;
+typedef number<cpp_dec_float<32> > cpp_dec_float_32;
+typedef number<cpp_dec_float<24> > cpp_dec_float_24;
+typedef number<cpp_dec_float<16> > cpp_dec_float_16;
 
 namespace pmfpack
 {
   
-  class GSLLookup : public Lookup
+  class HDF5Lookup : public Lookup
   {
   public:
                       
-    GSLLookup(Derivator *);
+    HDF5Lookup(Derivator *);
     
-    ~GSLLookup();    
+    ~HDF5Lookup();    
                 
     void compute(int, bool derivatives=false, bool polish=false);
     

@@ -21,6 +21,7 @@
 
 #include "PMF.h"
 #include "gsl/gsl_cblas.h"
+#include <gsl/gsl_ieee_utils.h>
 
 using namespace std;
 
@@ -34,6 +35,7 @@ namespace pmfpack
   
   PMF::PMF(double _fmean, double _sigma, int fsolver, int fdfsolver, int integral, int deriv)
   {
+    gsl_ieee_env_setup (); /* read GSL_IEEE_MODE */    
     central = false; // Are you using central moments (or integer) in your CFD calculations?
     roots = new Roots();
     roots->froot = NULL;    

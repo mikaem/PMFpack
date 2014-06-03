@@ -81,6 +81,18 @@ namespace pmfpack
       }
     }    
     fclose(stream);
+    
+//     std::cout << " Read table" << std::endl;    
+//     for (uint i=0; i<5; i++)
+//     {
+//       for (uint j=0; j<Nf; j++)
+//       {
+//         for (uint k=0; k<Ns; k++)
+//           std::cout << i << " " << j << " " << k << " " << tau_table[i][j][k] << std::endl;
+//       }
+//     }
+// 
+    
     return 1;
   }
   
@@ -145,7 +157,7 @@ namespace pmfpack
     (*tau)   = tau0;
     (*im)    = im0;
   }   
-  
+
   void GSLLookup::gslpolin2(double x1a[], double x2a[], double **ya, double *y)
   {
     double *ymtmp = (double*) malloc(order * sizeof(double));
@@ -210,6 +222,7 @@ namespace pmfpack
     // Copy submatrix to ys and interpolate
     for(int i = m-ms1; i < m+ms2; i++){
       ys[i-m+ms1] = tau_table[0][i]+n-ns1;
+      std::cout << *ys[i-m+ms1] << " " << i-m+ms1 << " " << i << " " << n-ns1 << std::endl;      
     }
     gslpolin2(x1s, x2s, ys, tau);
     // Polish the root with an fdf solver for best possible accuracy. The lookup is then initial guess.
@@ -228,5 +241,10 @@ namespace pmfpack
         gslpolin2(x1s, x2s, ys, dtau[k]);
       }    
     }
+  }
+
+  double ** GSLLookup::get_table(int i)
+  {
+    return tau_table[i];
   }
 }
