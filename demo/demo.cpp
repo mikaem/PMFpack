@@ -47,23 +47,23 @@ int main()
     typedef number<cpp_dec_float<32> > cpp_dec_float_32;
     typedef number<cpp_dec_float<48> > cpp_dec_float_48;
     
-   typedef cpp_dec_float_32 T;
-//    typedef double T;
+   //typedef cpp_dec_float_32 T;
+   typedef double T;
     
 //     double fmean, sigma, intensity_of_segregation;
     
     // Use some numbers from a 1D simulation of a mixing layer
 //     fmean = 0.02;
-    T fmean = T(2.0) / 1000;
+    T fmean = T(2.0) / 10;
 //     T sigma = (T(1.0) - T(6.0) / 10) * fmean * (T(1.0) - fmean);
-    T sigma = T(1.0) / 100 * fmean * (T(1.0) - fmean);
+    T sigma = T(1.0) / 10 * fmean * (T(1.0) - fmean);
 //     intensity_of_segregation = 0.4;
 //     sigma = intensity_of_segregation * fmean * (1 - fmean);
 //     sigma = 0.2559307963e-1; 
     
     T h = T(1.0) / 100000;
 //    DerivativesHP<T>* der = new DerivativesHP<T>(T(fmean), T(sigma), h, 11, true, 2, 9);
-    DerivativesDP<T>* der = new DerivativesDP<T>(T(fmean), T(sigma), h, 11, true, 2, 9);
+    DerivativesDP<T>* der = new DerivativesDP<T>(T(fmean), T(sigma), h, 9, true, 2, 8);
     std::vector<T> result3 = der->derivatives();
     cout << scientific << setprecision(numeric_limits<T>::digits10);
     cout << result3[0] << " " << result3[1] << " " << result3[3] << " " << result3[2] << " " << result3[4] << endl;

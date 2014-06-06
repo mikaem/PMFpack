@@ -5,7 +5,7 @@
 // PMFpack is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
-// (at your option) aNs later version.
+// (at your option) a later version.
 //
 // PMFpack is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -179,7 +179,7 @@ namespace pmfpack
     // are necessary to get 16 digits accuracy for second derivatives. 
     // Store using double - accurate to last digit.
 
-    T h = T(1.0) / pow(10, 5);
+    T h = T(1.0) / pow(10, 6);
     DerivativesHP<T>* der = new DerivativesHP<T>(T(0.5), T(0.1), h, 11, true, 2, 9);
     std::cout << std::scientific << std::setprecision(numeric_limits<T>::digits10);
     std::vector<T> result;

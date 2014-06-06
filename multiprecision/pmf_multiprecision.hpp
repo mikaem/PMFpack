@@ -95,7 +95,6 @@ static void swapri(std::vector<std::complex<N>> &a) {
 /// Compute an arbitrary-sized FFT in-place.
 template<class N>
 static void fft1(std::vector<std::complex<N>> &a, int sign) {
-//   auto_cpu_timer timer;
   if(is_pow_2(a.size()))
     fft0(a, sign);
   else {
@@ -115,40 +114,174 @@ static std::vector<std::complex<N>> simple_fft(const std::vector<T> &a, int sign
     return b;
 }
 
-template<class T>
-std::map<size_t, T> init_dct(size_t N)
-{
-//   auto_cpu_timer timer;
-  static const T pi = boost::math::constants::pi<T>();
-  std::map<size_t, T> cosmap;
-  for (size_t k=0; k<N; k++){
-    T kon = T(k)/(N-1);
-    for (size_t n=1; n<N-1; n++){
-      cosmap[n*k] = cos(pi*kon*n);
+template <class T>
+class DCT
+{ // Discrete cosine transform type I
+public:
+  DCT(size_t N)
+  : N(N)
+  {
+    init();
+  }
+  
+  void init()
+  {
+    static const T pi = boost::math::constants::pi<T>();
+    for (size_t k=0; k<N; k++){
+      for (size_t n=1; n<N-1; n++){
+        size_t m = (n*k) % ((N-1)/2);
+        typename std::map<size_t, T>::iterator it = cosmap.find(m);
+        if (it == cosmap.end())
+          cosmap[m] = cos(pi*(T(m) / (N-1)));
+      }
     }
   }
-  return cosmap;
-}
-
-template<class T>
-static std::vector<T> dct(const std::vector<T> &x, std::map<size_t, T> cosmap)
-{
-//   auto_cpu_timer timer;
-  static const T half = boost::math::constants::half<T>();
-  size_t N = x.size();
-  std::vector<T> xk(N);  
-  int sig = -1;
-  for (size_t k=0; k<N; k++){
-    sig *= -1;
-    xk[k] = half*(x[0]+sig*x[N-1]);
-    T kon = T(k)/(N-1);
+  
+  std::vector<T> dct_odd(const std::vector<T> &x)
+  {
+    static const T half = boost::math::constants::half<T>();
+    assert(N % 2 == 1);
+    assert(N == x.size());
+    
+    std::vector<T> xk(N);  
+    int sig = -1;
+    for (size_t k=0; k<N; k++){
+      sig *= -1;
+      xk[k] = half*(x[0]+sig*x[N-1]);
+      for (size_t n=1; n<N-1; n++){
+        T xn = x[n];
+        size_t m = ((n*k) % ((N-1)/2));
+        size_t f = ((n*k) % (N-1));      
+        size_t q = (n*k) % (2*(N-1));
+        
+        if (f == 0 and q == 0)
+          xk[k] += xn*cosmap[m];
+        else if (f == 0 &! q == 0)
+          xk[k] -= xn*cosmap[m];
+        else if (q > N-1)
+        { // lower half
+          if (m == 0)
+            xk[k] += xn*cosmap[(N-1)/2-m];  
+          else if (q < (3*(N-1)/2))
+            xk[k] -= xn*cosmap[m];
+          else
+          xk[k] += xn*cosmap[(N-1)/2-m];
+        }
+        else
+        {
+          if (m == 0)
+            xk[k] -= xn*cosmap[(N-1)/2-m];  
+          else if (q > (N-1)/2)
+            xk[k] -= xn*cosmap[(N-1)/2-m];
+          else
+            xk[k] += xn*cosmap[m];
+        }      
+      }
+    }
+    return xk;
+  }
+  
+  T dct_odd_k(size_t k, const std::vector<T> &x)
+  {
+  //   auto_cpu_timer timer;
+    static const T half = boost::math::constants::half<T>();
+    assert(N % 2 == 1);
+    assert(N == x.size());
+    int sig = pow(-1, k);
+    T xk = half*(x[0]+sig*x[N-1]);
     for (size_t n=1; n<N-1; n++){
       T xn = x[n];
-      xk[k] += xn*cosmap[n*k];
+      size_t m = ((n*k) % ((N-1)/2));
+      size_t f = ((n*k) % (N-1));      
+      size_t q = (n*k) % (2*(N-1));
+      
+      if (f == 0 and q == 0)
+        xk += xn*cosmap[m];
+      else if (f == 0 &! q == 0)
+        xk -= xn*cosmap[m];
+      else if (q > N-1)
+      { // lower half
+        if (m == 0)
+          xk += xn*cosmap[(N-1)/2-m];  
+        else if (q < (3*(N-1)/2))
+          xk -= xn*cosmap[m];
+        else
+          xk += xn*cosmap[(N-1)/2-m];
+      }
+      else
+      {
+        if (m == 0)
+          xk -= xn*cosmap[(N-1)/2-m];  
+        else if (q > (N-1)/2)
+          xk -= xn*cosmap[(N-1)/2-m];
+        else
+          xk += xn*cosmap[m];
+      }      
     }
+    return xk;
   }
-  return xk;
-}
+    
+  size_t N;
+  std::map<size_t, T>  cosmap;
+};
+
+
+template <class T>
+class DST
+{ // Discrete sine transform type I
+public:
+  DST(size_t N)
+  : N(N)
+  {
+    init();
+  }
+  
+  void init()
+  {
+    static const T pi = boost::math::constants::pi<T>();
+    for (size_t k=0; k<N; k++){
+      for (size_t n=0; n<N; n++){
+        size_t m = ((n+1)*(k+1)) % (2*(N+1));
+        typename std::map<size_t, T>::iterator it = sinmap.find(m);
+        if (it == sinmap.end())
+          sinmap[m] = sin(pi*(T(m) / (N+1)));
+      }
+    }
+  }  
+  
+  std::vector<T> dst_odd(const std::vector<T> &x)
+  {
+  //   auto_cpu_timer timer;
+    static const T half = boost::math::constants::half<T>();
+    assert(N == x.size());
+    std::vector<T> xk(N);  
+    for (size_t k=0; k<N; k++){
+      for (size_t n=0; n<N; n++){
+        T xn = x[n];
+        size_t m = (((n+1)*(k+1)) % (2*(N+1)));
+        xk[k] += xn*sinmap[m];
+      }
+    }
+    return xk;
+  }
+
+  T dst_odd_k(size_t k, const std::vector<T> &x)
+  {
+//     auto_cpu_timer timer;
+    static const T half = boost::math::constants::half<T>();
+    assert(N == x.size());
+    T xk=0;    
+    for (size_t n=0; n<N; n++){
+      T xn = x[n];
+      size_t m = (((n+1)*(k+1)) % (2*(N+1)));
+      xk += xn*sinmap[m];
+    }
+    return xk;
+  }
+  
+  std::map<size_t, T> sinmap;  
+  size_t N;
+};
 
 template <class T> 
 class ClenshawCurtisBase
@@ -251,22 +384,16 @@ public:
     
     c.resize(Z);
     for (size_t n=0; n<Z; n=n+2)
-      c[n] = T(2.0) / (T(1.0) - T(n*n));
-
-    fxc.resize(2*M);    
-    for (size_t n=0; n<Z; n++)
-      fxc[n] = c[n];
-        
-    for (size_t n=0; n<Z-2; n++)
-      fxc[Z+n] = c[Z-2-n];
+      c[n] = T(2) / (T(1) - T(n*n));
     
-    fft1(fxc, -1);
-    
-    w[0] = fxc[0].real() / (2*M);
-    w[Z-1] = fxc[Z-1].real() / (2*M);
+    DCT<T>* dct = new DCT<T>(Z);
+    std::vector<T> ff = dct->dct_odd(c);
+    std::vector<T> ww(Z);
+    w[0] = ff[0] / M;
+    w[Z-1] = ff[Z-1] / M;
     for (size_t n=1; n<Z-1; n++)
-      w[n] = 2*fxc[n].real() / (2*M);
-
+      w[n] = 2*ff[n] / M;
+        
     weights[i] = w;
     
 //     std::cout << i << std::endl;
@@ -287,11 +414,9 @@ public:
   
 protected:
   
-  typedef std::complex<T> C;  
   std::map<size_t, std::vector<T> > x;
   std::map<size_t, std::vector<T> > weights; 
   std::vector<T> fx, y, c;
-  std::vector<C> fxc;
 };
 
 template <class T> 
@@ -920,27 +1045,23 @@ class DerivativesHP
 
 public:
   
-  DerivativesHP()
-  {};
-  
-  DerivativesHP(T fmean, T sigma, T dx, size_t order, bool central)
-  : fmean(fmean), sigma(sigma), dx(dx), order(order), central(central)
-  {
-    min_integration_interval = 2;
-    max_integration_interval = 9;
-  };
-
   DerivativesHP(T fmean, T sigma, T dx, size_t order, bool central, 
-                size_t imin, size_t imax)
+                size_t imin=2, size_t imax=9, size_t max_iters_hp=2)
   : fmean(fmean), sigma(sigma), dx(dx), order(order), central(central),  
-    min_integration_interval(imin), max_integration_interval(imax)
-  {};
-  
+    min_integration_interval(imin), max_integration_interval(imax),
+    max_iters_hp(max_iters_hp)
+  {
+     dst = new DST<T>(order-2);
+     dct = new DCT<T>(order);
+  };
+    
   ~DerivativesHP()
   {
     delete ctau;
     delete ftau;
     delete dtau;
+    delete dst;
+    delete dct;
   }
   
   virtual void init()
@@ -996,7 +1117,7 @@ public:
     double tau1 = dtau->compute_newton(double(tau0), 3); 
     
     ctau->set_parameters(fmean, sigma);
-    T result = ctau->compute_newton(T(tau1), 2);
+    T result = ctau->compute_newton(T(tau1), max_iters_hp);
     ctau->set_parameters(fm0, sigma0);
     fmean = fm0;
     sigma = sigma0;
@@ -1008,23 +1129,18 @@ public:
   {
     set_parameters(fmean, sigma);
     double tau1 = dtau->compute_newton(double(tau0), 3);     
-    return ctau->compute_newton(T(tau1), 3);
+    return ctau->compute_newton(T(tau1), max_iters_hp);
   }
   
   virtual T compute_tau()
   {
     double tau1 = dtau->compute_newton(double(tau0), 3);     
-    return ctau->compute_newton(T(tau1), 3);
+    return ctau->compute_newton(T(tau1), max_iters_hp);
   }
     
   virtual std::vector<T> derivatives()
   {
-    auto_cpu_timer timer;  
-    typedef std::complex<T> C;  
-    std::vector<C> df;
-    std::vector<C> df2;
-    std::vector<C> dd;
-    
+//     auto_cpu_timer timer;  
     if (tau0 < 0)
       init();
 
@@ -1045,39 +1161,32 @@ public:
       f[n] = evaluate(z[n]*bma + x);
     }
 
-    dd.resize(2*N);    
-    for (size_t n=0; n<order; n++)
-      dd[n] = f[n];
+    std::vector<T> dcf = dct->dct_odd(f);
+    for (size_t i=0; i<dcf.size() ; i++)
+      dcf[i] = dcf[i] * 2;
+    
+    std::vector<T> dfs;
+    std::vector<T> d2fs;
+    d2fs.push_back(0);
+    for (int n=1; n<N; n++)
+    {      
+      dfs.push_back(-dcf[n]*n);
+      d2fs.push_back(dcf[n]*n*n);
+    }
+    d2fs.push_back(dcf[N]*N*N);
+    
+    std::vector<T> dffs = dst->dst_odd(dfs);
+    std::vector<T> d2ffs = dct->dct_odd(d2fs);
+    for (size_t i=0; i< dffs.size(); i++)
+      dffs[i] = dffs[i] * 2;
+    for (size_t i=0; i< d2ffs.size(); i++)
+      d2ffs[i] = d2ffs[i] * 2;
         
-    for (size_t n=0; n<order-2; n++)
-      dd[order+n] = f[order-2-n];
-    
-    fft1(dd, -1);
-    
-    df.resize(2*N);
-    df2.resize(2*N);
-    C one(0, 1);
-    for (int n=0; n<N; n++)
-    {
-      df[n] = -one * dd[n].real() * C(n, 0);
-      df2[n] = df[n] * one * C(n, 0);
-    }
-    df[N] = -one * dd[N].real() * C(0, 0);
-    df2[N] = df[N] * one * C(0, 0); 
-    for (int n=-(N-1); n<=-1; n++)
-    {
-      int i = N+(n+N-1)+1;
-      df[i] = -one * dd[i].real() * C(n, 0);
-      df2[i] = df[i] * one * C(n, 0);
-    }
-    fft1(df, -1);
-    fft1(df2, -1);
-    
     std::vector<T> result {f[order/2],
-                          -df[order/2].real() / (2*N) * con, 
-                          -df2[order/2].real() / (2*N) * con * con,
+                          -dffs[(order-2)/2] / (2*N) * con, 
+                          -d2ffs[order/2] / (2*N) * con * con,
                           0, 0};    
-    
+                              
     mode = central ? 2 : 3;
     x = central ? sigma : fmean * fmean + sigma;
     
@@ -1087,32 +1196,23 @@ public:
         f[n] = evaluate(z[n]*bma + x);
     }
 
-    for (size_t n=0; n<order; n++)
-      dd[n] = f[n];
+    dcf = dct->dct_odd(f);
+    
+    for (size_t i=0; i<dcf.size() ; i++)
+      dcf[i] = dcf[i] * 2;
+
+    for (int n=1; n<N; n++)
+    {      
+      dfs[n-1] = -dcf[n]*n;
+      d2fs[n]  = dcf[n]*n*n;
+    }
+    d2fs[N] = dcf[N]*N*N;
+    
+    T dffs1 = dst->dst_odd_k((order-2)/2, dfs);
+    T d2ffs1 = dct->dct_odd_k(order/2, d2fs);
         
-    for (size_t n=0; n<order-2; n++)
-      dd[order+n] = f[order-2-n];
-    
-    fft1(dd, -1);
-    
-    for (int n=0; n<N; n++)
-    {
-      df[n] = -one * dd[n].real() * C(n, 0);
-      df2[n] = df[n] * one * C(n, 0);
-    }
-    df[N] = -one * dd[N].real() * C(0, 0);
-    df2[N] = df[N] * one * C(0, 0); 
-    for (int n=-(N-1); n<=-1; n++)
-    {
-      int i = N+(n+N-1)+1;
-      df[i] = -one * dd[i].real() * C(n, 0);
-      df2[i] = df[i] * one * C(n, 0);
-    }
-    fft1(df, -1);
-    fft1(df2, -1);
-    
-    result[3] = -df[order/2].real() / (2*N) * con;
-    result[4] = -df2[order/2].real() / (2*N) * con * con;
+    result[3] = -dffs1 / N * con;
+    result[4] = -d2ffs1 / N * con * con;
     
     return result;
   }
@@ -1120,13 +1220,16 @@ public:
   ComputeTau<T>* ctau;
   ComputeTau<float>* ftau;
   ComputeTau<double>* dtau;
+  DCT<T>* dct;
+  DST<T>* dst;
   T fmean, sigma;
   float tau0 = -1;
   bool central = true;
   bool full_precision = true;
-  size_t max_integration_interval = 9;
-  size_t min_integration_interval = 2;
+  size_t max_integration_interval;
+  size_t min_integration_interval;
   size_t mode;
+  size_t max_iters_hp;  
   T x;
   T dx;
   size_t order;
