@@ -13,9 +13,9 @@ Erfinv = norm().ppf
 #sigma = 0.16674922174125 * fmean * (1 - fmean)
 
 #fmean = 4.653900989e-03
-fmean = 0.2
+fmean = 0.02
 #sigma = 8.9500083540e-01 * fmean * (1 - fmean)
-sigma = 0.9* fmean * (1 - fmean)
+sigma = 0.999* fmean * (1 - fmean)
 
 pmf = PMF(fmean, sigma, 1, 1, 0, 1)
 

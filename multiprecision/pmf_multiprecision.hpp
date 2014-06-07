@@ -308,7 +308,6 @@ public:
   {
     T new_integral = 0;
     T prev_integral = 0;
-    T f_shared = 0;
     std::vector<T> previous_fvals;
     T xmhalf = (xmax - xmin) / 2;
     T xmsum = (xmax + xmin) / 2;    
@@ -655,8 +654,7 @@ public:
         fdf_integral = fdf_integral + ww[n]*fdf[n];   
       fdf_integral = fdf_integral*xmhalf;
       
-//           std::cout << i << " " << xmin << " " << xmax << " " << new_integral <<  " "<< prev_integral << " " << fabs(new_integral - prev_integral) << std::endl;
-//          std::cout << i << " " << fabs(new_integral - prev_integral) << std::endl;
+//       std::cout << i << " " << xmin << " " << xmax << " " << new_integral <<  " "<< prev_integral << " " << fabs(new_integral - prev_integral) << std::endl;
       if (fabs(new_integral - prev_integral) < this->epsilon)
         break;        
     }      
@@ -690,6 +688,16 @@ public:
     return X * X * exp(- x * x / (2-4*tau));
   }
   
+  std::vector<T> function_fdf(T x, T tau, T alfa)
+  {
+     T tmp = (x - alfa) / (2*sqrt(tau));
+     T X = (1+boost::math::erf(tmp));
+     T f = X * X * exp(- x * x / (2-4*tau));
+     T df = X * (alfa - x / (T(1)-T(2)*tau)) * exp(-tmp*tmp-x*x/(T(2)-T(4)*tau));
+     std::vector<T> result = {f, df};
+     return result;
+  }
+
   T integrate(T tau)
   {
     static const T pi = boost::math::constants::pi<T>();
@@ -834,7 +842,210 @@ public:
     }        
     return new_integral;
   }
+
+  std::vector<T> integrate_domain_fdf(T xmin, T xmax, T tau, T alfa)
+  {
+    T new_integral = 0;
+    T prev_integral = 0;
+    T fdf_integral = 0;
+    std::vector<T> previous_fvals;
+    std::vector<T> previous_fdfvals;
+    T xmhalf = (xmax - xmin) / 2;
+    T xmsum = (xmax + xmin) / 2;    
+    std::vector<T> vals;
+    
+    for (size_t i = this->interval_min; i < this->interval_max; i++)
+    {
+        prev_integral = new_integral;
+
+        size_t Z = pow(2, i) + 1;
+        
+        this->fx.resize(Z);
+        this->y.resize(Z);
+        fdf.resize(Z);
+        
+        std::vector<T> xx = this->x[i];
+        for (size_t n=0; n<Z; n++)
+          this->y[n] = xx[n]*xmhalf + xmsum;
+        
+        if (i == this->interval_min)
+        {
+          if (right and f_upper > this->epsilon)
+          {
+            this->fx[0] = f_upper;
+            fdf[0] = fdf_upper;
+            for (size_t n=1; n<Z; n++)
+            {
+              vals = function_fdf(this->y[n], tau, alfa);
+              this->fx[n] = vals[0];
+              fdf[n] = vals[1];
+            }
+          }
+          else if (not right and f_lower > this->epsilon)
+          {
+            this->fx[Z-1] = f_lower;
+            fdf[Z-1] = fdf_lower;
+            for (size_t n=0; n<Z-1; n++)
+            {
+               vals = function_fdf(this->y[n], tau, alfa);
+               this->fx[n] = vals[0];
+               fdf[n] = vals[1];              
+            }
+          }
+          else
+          {           
+            for (size_t n=0; n<Z; n++)
+            {
+              vals = function_fdf(this->y[n], tau, alfa);
+              this->fx[n] = vals[0];
+              fdf[n] = vals[1];
+            }
+          }
+        }
+        else
+        { // Reuse function values from coarser grid
+          for (size_t n=1; n<Z; n=n+2)
+          {
+            vals = function_fdf(this->y[n], tau, alfa);
+            this->fx[n] = vals[0];
+            fdf[n] = vals[1];
+          }
+          for (size_t n=0; n<Z; n=n+2)
+          {
+            this->fx[n] = previous_fvals[n/2];
+            fdf[n] = previous_fdfvals[n/2];
+          }          
+        }
+        // Store function evaluations for even finer grid
+        previous_fvals.resize(Z);
+        previous_fdfvals.resize(Z);
+        for (size_t n=0; n<Z; n++)
+        {
+          previous_fvals[n] = this->fx[n];
+          previous_fdfvals[n] = fdf[n];
+        }
+        
+//         for (size_t n=0; n<Z; n++)
+//           std::cout << " i " << n << " " << fx[n] << std::endl;
+        
+        // Store edge values for next interval
+        f_upper = this->fx[Z-1];
+        f_lower = this->fx[0];
+        fdf_upper = fdf[Z-1];
+        fdf_lower = fdf[0];
+         
+        new_integral = 0;
+        std::vector<T> ww = this->weights[i];
+        for (size_t n=0; n<Z; n++)
+          new_integral = new_integral + ww[n]*this->fx[n];   
+        new_integral = new_integral*xmhalf;
+        
+        fdf_integral = 0;
+        for (size_t n=0; n<Z; n++)
+          fdf_integral = fdf_integral + ww[n]*fdf[n];   
+        fdf_integral = fdf_integral*xmhalf;
+        
+//          std::cout << i << " " << xmin << " " << xmax << " " << new_integral <<  " "<< prev_integral << " " << fabs(new_integral - prev_integral) << std::endl;
+        if (fabs(new_integral - prev_integral) < this->epsilon)
+          break;        
+    }        
+    std::vector<T> result = {new_integral, fdf_integral};
+    return result;
+
+  }
   
+  boost::math::tuple<T, T> integrate_fdf(T tau)
+  {
+    static const T pi = boost::math::constants::pi<T>();
+    static const T root_pi = boost::math::constants::root_pi<T>();
+    T alfa = sqrt(T(2.0)) * boost::math::erfc_inv(2*this->fmean);
+    T integral = 0.0;
+    T integral_dom = 1.0;
+    T two_root_tau = 2*sqrt(tau);
+    T phi_X_unity = (alfa + two_root_tau * this->inv_eps) ; // above this X in integrand is > 1-epsilon and can be set to unity, which makes the integral analytical
+    T phi_X_99 = (alfa + two_root_tau * this->inv_99);
+    T phi_X_01 = (alfa + two_root_tau * this->inv_01);
+    T phi_X_5 = alfa;
+    std::vector<T> integrals = {0, 0};
+    std::vector<T> integrals_dom = {1, 0};
+    
+    // Compute constant divisor in integral
+    T div = 4*sqrt(pi*(2-4*tau));
+    
+    // For low variance the integral is smoother, no sharp gradient around alfa
+    if (tau > 0.25)
+    {
+      phi_X_5 = 0;
+      phi_X_99 = sqrt((4*tau-2)*log(div / 400));
+      phi_X_01 = -phi_X_99;
+    }
+    T xmin = phi_X_5;
+    T xmax = 0.0;
+    size_t i = 1;
+    
+    T dphi = (phi_X_99-phi_X_01) / 2;
+    dphi = dphi < T(2.0) / 10 ? dphi : T(2.0) / 10;
+    right = true;
+    
+    while (integrals_dom[0] / integrals[0] > this->epsilon*this->sigma)
+    { 
+       xmax = xmin + T(i) * dphi;
+       
+       integrals_dom = this->integrate_domain_fdf(xmin, xmax, tau, alfa);
+       integrals_dom[0] /= div;
+       integrals_dom[1] /= div;
+       integrals[0] += integrals_dom[0];
+       integrals[1] += integrals_dom[1];
+       xmin = xmax;
+       i++;
+              
+       // Check if xmin is large such that X in the integrand is unity
+       if (xmin > phi_X_unity)
+       {
+         T small2 = 6*std::numeric_limits<T>::digits;
+         xmax = sqrt(2*(1-2*tau)*small2);
+         integrals_dom = this->integrate_domain_fdf(xmin, xmax, tau, alfa);
+         integrals[0] += (1 - cdf(this->s, xmin/sqrt(1-2*tau))) ;
+         integrals[1] += integrals_dom[1] / div;
+         std::cout << integrals_dom[1] << " " << integrals_dom[0] << std::endl;
+         break;
+       }        
+    }
+    
+    
+    // Now move to the left of phi_X_5
+    this->f_lower = 0;
+    this->f_upper = 0;
+    fdf_lower = 0;
+    fdf_upper= 0;
+    xmax = phi_X_5;
+    integral_dom = 1.0;
+    integrals_dom[0] = 1.0;
+    i = 1;
+    right = false;
+    while (integrals_dom[0] > this->epsilon*this->sigma)
+    {
+       xmin = xmax - T(i) * dphi;
+
+       integrals_dom = this->integrate_domain_fdf(xmin, xmax, tau, alfa);
+       integrals_dom[0] /= div;
+       integrals_dom[1] /= div;
+       integrals[0] += integrals_dom[0];
+       integrals[1] += integrals_dom[1];
+       xmax = xmin;
+       i++;
+    }
+    // Scale the integrals appropriately
+    integrals[1] = integrals[1] / tau / sqrt(tau) / root_pi;
+    integrals[1] = -integrals[1] / this->im;
+    
+    integrals[0] = T(1.0) - integrals[0] / this->im;
+    
+//     std::cout <<  tau << " " << T(1.0) - integral / this->im << std::endl;
+    
+    return boost::math::make_tuple(integrals[0], integrals[1]);        
+  }
+
     
   boost::math::normal_distribution<T> s;
   T inv_eps = -quantile(s, numeric_limits<T>::epsilon()/1000);
@@ -842,6 +1053,8 @@ public:
   T inv_01  = -quantile(complement(s, T(1.0) / 100));
   bool right;
   T f_upper, f_lower;
+  T fdf_upper, fdf_lower;
+  std::vector<T> fdf;
 };
 
 template <class T>
@@ -928,11 +1141,19 @@ public:
     delete tol;
   }
   
-  void set_parameters(T fm, T sm)
+  bool set_parameters(T fm, T sm)
   {
     fmean = fm;
     sigma = sm;
-    CC->set_parameters(fm, sm);
+    T seg = sigma / fmean / (1-fmean);
+    if (seg > (1-std::numeric_limits<T>::epsilon()) or 
+      seg < std::numeric_limits<T>::epsilon())
+      return false;
+    else
+    {
+      CC->set_parameters(fm, sm);    
+      return true;
+    }    
   }
   
   void init()
@@ -956,22 +1177,59 @@ public:
   T compute_bracket()
   {  
     it = 100;
-    T lower = T(1.0) / 100;
-    T upper = T(5.0) / 10 - lower;    
+    T small = T(1.0) / 100;
+    T lower = small;
+    T upper = T(5.0) / 10 - small;    
 
     T fa = f->operator()(lower);
     T fb = f->operator()(upper);
-    while (fa * fb > 0)
+//     while (fa * fb > 0)
+//     {
+//       std::cout << fa << " " << fb << " " << lower << " " << upper << std::endl;
+//       lower = lower / 10;
+//       upper = T(5.0) / 10 - lower; 
+//       fa = f->operator()(lower);
+//       fb = f->operator()(upper);
+//     }
+//     std::cout << "ut " <<fa << " " << fb << " " << lower << " " << upper << std::endl;
+// 
+//     std::cout << "Before " << fa << " " << fb << std::endl;
+    int count = 0;
+    while (fa > 0 and count < 10)
     {
       lower = lower / 10;
-      upper = T(5.0) / 10 - lower; 
       fa = f->operator()(lower);
+//       std::cout <<fa << " " << lower << std::endl;
+      count++;
+    } 
+        
+    count = 0;
+    while (fb < 0 and count < 10)
+    {  
+      small = small / 10;
+      upper = T(5) / 10 - small ;
       fb = f->operator()(upper);
+//       std::cout <<fb << " " << upper << std::endl;
+      count++;
     }
-    std::pair<T, T> found = boost::math::tools::toms748_solve(*f, lower, upper, fa, fb, *tol, it);
-    if (it == 100) std::cout << " Root not found Boost toms748 Fsolver" << std::endl;
-    T tau = (found.first + found.second) / 2;
-    return tau;
+//     std::cout << fa << " " << fb << " " << lower << " " << upper << std::endl;
+    
+    if (fa*fb < 0)
+    {
+      std::pair<T, T> found = boost::math::tools::toms748_solve(*f, lower, upper, fa, fb, *tol, it);
+      if (it == 100) std::cout << " Root not found Boost toms748 Fsolver" << std::endl;
+      T tau = (found.first + found.second) / 2;
+//     std::cout << tau << std::endl;
+      return tau;
+    }
+    else
+    {
+      std::cout << " Root not found, could not bracket root. " << std::endl;
+      std::cout << fmean << " " << sigma <<  " " << sigma / fmean / (1-fmean) << std::endl;
+      std::cout << fa << " " << fb << std::endl;
+//       std::cout << lower << " " << upper << std::endl;
+      return -1;
+    }
   }
     
   ClenshawCurtisTransformed<T>* CC;
@@ -1015,10 +1273,17 @@ struct ComputeTauBracketInit
   
   T compute(T fm, T sm) 
   {
-    ctau->set_parameters(fm, sm);
-    ftau->set_parameters(M(fm), M(sm));
-    M tau0 = ftau->compute_bracket();      
-    return ctau->compute_newton(T(tau0));
+    bool ok = ctau->set_parameters(fm, sm);
+    ok = ftau->set_parameters(M(fm), M(sm));
+    if (ok)
+    {
+      M tau0 = ftau->compute_bracket();      
+      return ctau->compute_newton(T(tau0));
+    }
+    else
+    {
+      return -1;
+    }
   };
   
   T compute() 
@@ -1072,22 +1337,32 @@ public:
                               std::numeric_limits<T>::epsilon(), 
                               2*std::numeric_limits<T>::digits);
     
-    dtau = new ComputeTau<double>(double(fmean), double(sigma), 2, 8);
-    ftau = new ComputeTau<float>(float(fmean), float(sigma), 2, 7);
-    tau0 = ftau->compute_bracket();
+    dtau = new ComputeTau<double>(double(fmean), double(sigma), 2, 9);
+    ftau = new ComputeTau<float>(float(fmean), float(sigma), 2, 8);
   }
   
-  virtual void set_parameters(T fm, T sm)
+  virtual bool set_parameters(T fm, T sm)
   {
     if (tau0 < 0)
       init();
 
     fmean = fm;
     sigma = sm;
-    ctau->set_parameters(fmean, sigma);
-    ftau->set_parameters(float(fmean), float(sigma));
-    dtau->set_parameters(double(fmean), double(sigma));
-    tau0 = ftau->compute_bracket(); // Initial guess for double    
+    T seg = sm / fm / (1-fm);
+    if (seg > (1-std::numeric_limits<T>::epsilon()) or
+        seg < std::numeric_limits<T>::epsilon())
+    {
+      std::cout << "fmean " << fm << " sigma " << sm << " Seg " << seg << std::endl;
+      return false;
+    }
+    else
+    {
+      bool ok;
+      ok = ctau->set_parameters(fmean, sigma);
+      ok = ftau->set_parameters(float(fmean), float(sigma));
+      ok = dtau->set_parameters(double(fmean), double(sigma));
+      return ok;
+    }
   }
   
   virtual T evaluate(T const z) 
@@ -1112,17 +1387,33 @@ public:
     {  // Derivative with respect to im (fmean constant)
       sigma = z - fmean * fmean;
     }
+//     std::cout << fmean << " " << sigma << " " << sigma/fmean/(1-fmean) << std::endl;
     
-    dtau->set_parameters(double(fmean), double(sigma)); 
-    double tau1 = dtau->compute_newton(double(tau0), 3); 
-    
-    ctau->set_parameters(fmean, sigma);
-    T result = ctau->compute_newton(T(tau1), max_iters_hp);
-    ctau->set_parameters(fm0, sigma0);
-    fmean = fm0;
-    sigma = sigma0;
-    
-    return result;
+    bool ok = set_parameters(fmean, sigma);
+    if (not ok)
+    {
+      return -1;
+    }
+    else
+    {    
+      tau0 = ftau->compute_bracket();
+      if (tau0 < 0)
+        tau1 = dtau->compute_bracket();
+      else
+        tau1 = dtau->compute_newton(double(tau0), 3); 
+      
+      T result;
+      if (tau1 < 0)
+        result = ctau->compute_bracket();
+      else
+        result = ctau->compute_newton(T(tau1), max_iters_hp);
+      
+      ctau->set_parameters(fm0, sigma0);
+      fmean = fm0;
+      sigma = sigma0;
+      
+      return result;
+    }
   };
   
   virtual T compute_tau(T fmean, T sigma)
@@ -1134,6 +1425,9 @@ public:
   
   virtual T compute_tau()
   {
+    if (tau0 < 0)
+      init();
+
     double tau1 = dtau->compute_newton(double(tau0), 3);     
     return ctau->compute_newton(T(tau1), max_iters_hp);
   }
@@ -1146,19 +1440,32 @@ public:
 
     const T half = boost::math::constants::half<T>();
     const T pi = boost::math::constants::pi<T>();
-    T bma = dx * half;
-    T con = 1 / bma;
-    
+        
     x = fmean;
     mode = central ? 0 : 1;
 
     int N = order - 1;
     std::vector<T> z(order);
     std::vector<T> f(order);
+    f[N/2] = evaluate(x);
+//     T h = dx * f[N/2];   
+    T h = dx;   
+    T bma = h * half;
+    T con = 1 / bma;
+    
     for (size_t n=0; n<order; n++)
     {
-      z[n] = cos(n*pi/N);
-      f[n] = evaluate(z[n]*bma + x);
+      if (n != N/2)
+      { 
+        z[n] = cos(n*pi/N);
+        f[n] = evaluate(z[n]*bma + x);
+        if (f[n] < 0)
+        {
+          std::cerr << "Intensity of segregation out of range. Use smaller domain for computing derivatives!!" << std::endl;
+        }
+      }
+
+//       std::cout << f[n] << " " << z[n]*bma + x << std::endl;
     }
 
     std::vector<T> dcf = dct->dct_odd(f);
@@ -1215,6 +1522,104 @@ public:
     result[4] = -d2ffs1 / N * con * con;
     
     return result;
+// //     auto_cpu_timer timer;  
+//     typedef std::complex<T> C;  
+//     std::vector<C> df;
+//     std::vector<C> df2;
+//     std::vector<C> dd;
+//     
+//     if (tau0 < 0)
+//       init();
+// 
+//     const T half = boost::math::constants::half<T>();
+//     const T pi = boost::math::constants::pi<T>();
+//     T bma = dx * half;
+//     T con = 1 / bma;
+//     
+//     x = fmean;
+//     mode = central ? 0 : 1;
+// 
+//     int N = order - 1;
+//     std::vector<T> z(order);
+//     std::vector<T> f(order);
+//     for (size_t n=0; n<order; n++)
+//     {
+//       z[n] = cos(n*pi/N);
+//       f[n] = evaluate(z[n]*bma + x);
+//     }
+// 
+//     dd.resize(2*N);    
+//     for (size_t n=0; n<order; n++)
+//       dd[n] = f[n];
+//         
+//     for (size_t n=0; n<order-2; n++)
+//       dd[order+n] = f[order-2-n];
+//     
+//     fft1(dd, -1);
+//     
+//     df.resize(2*N);
+//     df2.resize(2*N);
+//     C one(0, 1);
+//     for (int n=0; n<N; n++)
+//     {
+//       df[n] = -one * dd[n].real() * C(n, 0);
+//       df2[n] = df[n] * one * C(n, 0);
+//     }
+//     df[N] = -one * dd[N].real() * C(0, 0);
+//     df2[N] = df[N] * one * C(0, 0); 
+//     for (int n=-(N-1); n<=-1; n++)
+//     {
+//       int i = N+(n+N-1)+1;
+//       df[i] = -one * dd[i].real() * C(n, 0);
+//       df2[i] = df[i] * one * C(n, 0);
+//     }
+//     fft1(df, -1);
+//     fft1(df2, -1);
+//     
+//     std::vector<T> result {f[order/2],
+//                           -df[order/2].real() / (2*N) * con, 
+//                           -df2[order/2].real() / (2*N) * con * con,
+//                           0, 0};    
+//     
+//     mode = central ? 2 : 3;
+//     x = central ? sigma : fmean * fmean + sigma;
+//     
+//     for (size_t n=0; n<order; n++)
+//     {
+//       if (n != N/2)
+//         f[n] = evaluate(z[n]*bma + x);
+//     }
+// 
+//     for (size_t n=0; n<order; n++)
+//       dd[n] = f[n];
+//         
+//     for (size_t n=0; n<order-2; n++)
+//       dd[order+n] = f[order-2-n];
+//     
+//     fft1(dd, -1);
+//     
+//     for (int n=0; n<N; n++)
+//     {
+//       df[n] = -one * dd[n].real() * C(n, 0);
+//       df2[n] = df[n] * one * C(n, 0);
+//     }
+//     df[N] = -one * dd[N].real() * C(0, 0);
+//     df2[N] = df[N] * one * C(0, 0); 
+//     for (int n=-(N-1); n<=-1; n++)
+//     {
+//       int i = N+(n+N-1)+1;
+//       df[i] = -one * dd[i].real() * C(n, 0);
+//       df2[i] = df[i] * one * C(n, 0);
+//     }
+//     fft1(df, -1);
+//     fft1(df2, -1);
+//     
+//     result[3] = -df[order/2].real() / (2*N) * con;
+//     result[4] = -df2[order/2].real() / (2*N) * con * con;
+//     
+//     return result;
+//     
+    
   }
     
   ComputeTau<T>* ctau;
@@ -1224,6 +1629,7 @@ public:
   DST<T>* dst;
   T fmean, sigma;
   float tau0 = -1;
+  double tau1;
   bool central = true;
   bool full_precision = true;
   size_t max_integration_interval;
