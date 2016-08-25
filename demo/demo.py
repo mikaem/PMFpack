@@ -13,9 +13,9 @@ Erfinv = norm().ppf
 #sigma = 0.16674922174125 * fmean * (1 - fmean)
 
 #fmean = 4.653900989e-03
-fmean = 0.02
+fmean = 0.5
 #sigma = 8.9500083540e-01 * fmean * (1 - fmean)
-sigma = 0.999* fmean * (1 - fmean)
+sigma = 0.9* fmean * (1 - fmean)
 
 pmf = PMF(fmean, sigma, 1, 1, 0, 1)
 
@@ -26,10 +26,11 @@ pmf.chi = 0.38430391476813  # Mean scalar dissipation rate (defined with the fac
 pmf.DT = 1.         # Turbulent diffusivity
 
 # The simulations are run using integer moments
-pmf.central = False
+pmf.central = True
 
 #pmf.reallocate_solver(pmf.froot, 1)
 pmf.compute(0, True)
+#pmf.tau = 2e-7
 
 from scipy.special import erf, erfinv
 def integrand(x, tau, alfa):
@@ -121,6 +122,7 @@ y = linspace(em, ep, 1000)
 
 figure("dfdtau original")
 plot(xx[1:-1], dintegrand(xx[1:-1], tau, alfa))
+
 
 show()
 
